@@ -246,12 +246,12 @@ const canEditPL = n => ADMIN || (isOpen() && plOn(n));
 const byId = (t,id) => S[t].find(r=>r.id===id);
 const curKhoa = () => $('#selKhoa').value;
 
-let LOADED=false;
+let LOADED=false, SERVER_OLD=false;
 async function loadAll(force){
   if(DB.remote && LOADED && !force){ S.khoa.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0)); return; }  // đã cập nhật tại chỗ
   if(DB.remote && force && SYNC_N) await SYNC_Q;
   LOADED=true;
-  if(DB.allTables){ const d=await DB.allTables(); TABLES.forEach(t=>S[t]=d[t]||[]); }
+  if(DB.allTables){ const d=await DB.allTables(); TABLES.forEach(t=>S[t]=d[t]||[]); SERVER_OLD = MODE==='gs' && !!S.cau_hinh[0] && !('phu_luc' in S.cau_hinh[0]); }
   else { const res = await Promise.all(TABLES.map(t=>DB.all(t))); TABLES.forEach((t,i)=>S[t]=res[i]); }
   S.khoa.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0));
 }
@@ -760,6 +760,7 @@ function aCH(){
   const c=cfg(); const hc=c.han_chot?(d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16))(new Date(c.han_chot)):'';
   $('#aBody').innerHTML=`<div class="row"><div class="card">
     <div class="fld"><label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text)"><input type="checkbox" id="cMo" ${c.mo?'checked':''}> Cho phép các khoa nhập/sửa dữ liệu</label><div class="muted">Bỏ chọn = khóa: chỉ quản trị được sửa.</div></div>
+    ${SERVER_OLD?'<div class="notice" style="background:var(--pink);border-color:#F2B8B8;color:var(--red)"><b>Apps Script trên Google chưa được cập nhật bản mới</b> nên phần đóng/mở phụ lục không lưu được. Dán Code.gs mới → Lưu → Triển khai → Quản lý triển khai → ✏️ Sửa → Phiên bản: <b>Phiên bản mới</b> → Triển khai.</div>':''}
     <div class="fld"><label>Phụ lục cho phép các khoa làm</label>
       ${[[1,'PL1 – Nhận từ Trung ương'],[2,'PL2 – Nhận từ tuyến TP'],[3,'PL3 – Chuyển giao tuyến dưới'],[4,'PL4 – Cán bộ luân phiên']].map(([n,t])=>`<label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text);margin:4px 0"><input type="checkbox" class="cPL" value="${n}" ${plOn(n)?'checked':''}> ${t}</label>`).join('')}
       <div class="muted">Bỏ chọn = ẩn phụ lục đó với các khoa; dữ liệu đã nhập vẫn giữ và vẫn xuất Excel.</div></div>
