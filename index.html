@@ -6,6 +6,7 @@
 <title>Khảo sát nhu cầu CGKT & hỗ trợ chuyên môn 2027 – BV Phổi Hải Phòng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
 :root{--navy:#002060;--blue:#0C4F9C;--sky:#5B9BD5;--green:#1E8E5A;--orange:#E87A1E;--red:#C00000;--teal:#138D90;--purple:#6A4C9C;
@@ -29,7 +30,7 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .btn:disabled{opacity:.45;cursor:not-allowed}
 main{max-width:1280px;margin:0 auto;padding:16px}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
-.who{display:grid;grid-template-columns:2fr 1.4fr 1fr auto;gap:10px;align-items:end}
+.who{display:grid;grid-template-columns:2fr 1.4fr 1fr;gap:10px;align-items:end}
 label{display:block;font-size:12.5px;color:var(--grey);margin-bottom:4px;font-weight:500}
 input[type=text],input[type=number],input[type=password],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
 input:focus,select:focus,textarea:focus{outline:2px solid #BFD6F2;border-color:var(--sky)}
@@ -105,9 +106,8 @@ textarea{resize:vertical;min-height:60px}
   <div id="notice"></div>
   <div class="card who">
     <div><label>Khoa / Phòng *</label><select id="selKhoa"></select></div>
-    <div><label>Người khai</label><input type="text" id="inNguoi" placeholder="Họ tên"></div>
-    <div><label>Điện thoại</label><input type="text" id="inSdt" placeholder="SĐT liên hệ"></div>
-    <div><button class="btn" id="btnPrint" title="In phiếu của khoa">🖨 In phiếu</button></div>
+    <div><label>Người khai</label><input type="text" id="inNguoi" placeholder="Chọn khoa/phòng trước" disabled></div>
+    <div><label>Điện thoại</label><input type="text" id="inSdt" placeholder="Chọn khoa/phòng trước" disabled></div>
   </div>
 
   <div class="tabs" id="tabs">
@@ -125,9 +125,10 @@ textarea{resize:vertical;min-height:60px}
 
 <script>
 /* ================= CẤU HÌNH =================
-   Để trống GSHEET_URL => chế độ DÙNG THỬ (lưu trên trình duyệt này).
-   Dán URL ứng dụng web Apps Script (…/exec) => dữ liệu lưu chung trên Google Sheet. */
+   Ưu tiên: SUPABASE_URL (+ANON_KEY) → GSHEET_URL (Apps Script …/exec) → để trống cả hai = chế độ DÙNG THỬ (lưu trên trình duyệt). */
 const CFG = {
+  SUPABASE_URL: '',
+  SUPABASE_ANON_KEY: '',
   GSHEET_URL: 'https://script.google.com/macros/s/AKfycbyPjNoSMfyboH_egG9EHWeg1I0PzWyYd4fMRQOzpiITdjcvJ6locUO2DFCdoMYPMrvBRQ/exec',
   TEN_BV: 'Bệnh viện Phổi Hải Phòng',
   DEMO_ADMIN_PASSWORD: 'admin'
@@ -157,7 +158,9 @@ function toast(m,ms=2200){const t=$('#toast');t.textContent=m;t.style.display='b
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 
 /* ================= LỚP DỮ LIỆU ================= */
-const isDemo = !CFG.GSHEET_URL;
+const MODE = CFG.SUPABASE_URL ? 'sb' : CFG.GSHEET_URL ? 'gs' : 'demo';
+const isDemo = MODE==='demo';
+let sb = null;
 const LocalDB = {
   key:'cgkt2027_demo',
   _get(){try{return JSON.parse(localStorage.getItem(this.key)||'{}')}catch(e){return {}}},
@@ -185,6 +188,7 @@ const applyLocal = {
   clear(t){ S[t]=[] }
 };
 const GSDB = {
+  remote:true,
   async _send(req){
     let r; try{ r=await fetch(CFG.GSHEET_URL,{method:'POST',body:JSON.stringify(req)}) }catch(e){ throw new Error('Không kết nối được Google Sheet') }
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Lỗi máy chủ'); return j;
@@ -195,7 +199,7 @@ const GSDB = {
     SYNC_N++; syncBadge();
     const done=async()=>{ SYNC_N--; syncBadge();
       if(!SYNC_N && SYNC_ERR){ try{ await loadAll(true); SYNC_ERR=false; syncBadge(); render(); if(INADMIN) adminView(); }catch(x){} } };
-    SYNC_Q = SYNC_Q.then(()=>this._send(req)).then(done, e=>{ SYNC_ERR=true; toast('Không lưu được: '+e.message+' – web sẽ tải lại dữ liệu từ Google Sheet',5000); return done(); });
+    SYNC_Q = SYNC_Q.then(()=>this._send(req)).then(done, e=>{ SYNC_ERR=true; toast('Không lưu được: '+e.message+' – web sẽ tải lại dữ liệu từ máy chủ',5000); return done(); });
   },
   async allTables(){ const r=await fetch(CFG.GSHEET_URL+(CFG.GSHEET_URL.includes('?')?'&':'?')+'t='+Date.now()); const j=await r.json(); if(!j.ok) throw new Error(j.error); return j.data },
   async all(t){ return (await this.allTables())[t]||[] },
@@ -208,7 +212,27 @@ const GSDB = {
   async login(email,pw){ const r=await fetch(CFG.GSHEET_URL,{method:'POST',body:JSON.stringify({action:'login',pw})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'Sai mật khẩu'); sessionStorage.setItem('cgkt_pw',pw); return true },
   async logout(){ sessionStorage.removeItem('cgkt_pw') }
 };
-const DB = isDemo ? LocalDB : GSDB;
+const SBDB = Object.assign(Object.create(GSDB), {
+  async _send(req){
+    const t=req.table; let q;
+    switch(req.action){
+      case 'insert': q=sb.from(t).insert(req.rows); break;
+      case 'update': q=sb.from(t).update(req.patch).eq('id',req.id); break;
+      case 'updateWhere': q=sb.from(t).update(req.patch).eq(req.col,req.val); break;
+      case 'remove': q=sb.from(t).delete().eq('id',req.id); break;
+      case 'clear': q=sb.from(t).delete().not('id','is',null); break;
+    }
+    const {error}=await q; if(error) throw new Error(error.message.includes('row-level security')?'Không có quyền hoặc đã khóa nhập liệu':error.message); return {ok:true};
+  },
+  async allTables(){
+    const one=async t=>{let out=[],f=0;for(;;){const{data,error}=await sb.from(t).select('*').range(f,f+999);if(error)throw error;out=out.concat(data);if(data.length<1000)break;f+=1000}return out};
+    const r=await Promise.all(TABLES.map(one)); const d={}; TABLES.forEach((t,i)=>d[t]=r[i]); return d;
+  },
+  async isAdmin(){ const{data}=await sb.auth.getSession(); return !!data.session },
+  async login(email,pw){ const{error}=await sb.auth.signInWithPassword({email,password:pw}); if(error) throw new Error('Sai email hoặc mật khẩu'); return true },
+  async logout(){ await sb.auth.signOut() }
+});
+const DB = MODE==='sb' ? SBDB : MODE==='gs' ? GSDB : LocalDB;
 
 /* ================= TRẠNG THÁI ================= */
 const S = {cau_hinh:[],khoa:[],don_vi:[],ky_thuat:[],lua_chon:[],dang_ky:[]};
@@ -221,8 +245,8 @@ const curKhoa = () => $('#selKhoa').value;
 
 let LOADED=false;
 async function loadAll(force){
-  if(DB===GSDB && LOADED && !force){ S.khoa.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0)); return; }  // đã cập nhật tại chỗ
-  if(DB===GSDB && force && SYNC_N) await SYNC_Q;
+  if(DB.remote && LOADED && !force){ S.khoa.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0)); return; }  // đã cập nhật tại chỗ
+  if(DB.remote && force && SYNC_N) await SYNC_Q;
   LOADED=true;
   if(DB.allTables){ const d=await DB.allTables(); TABLES.forEach(t=>S[t]=d[t]||[]); }
   else { const res = await Promise.all(TABLES.map(t=>DB.all(t))); TABLES.forEach((t,i)=>S[t]=res[i]); }
@@ -259,7 +283,7 @@ function renderHead(){
   const hc = c.han_chot ? new Date(c.han_chot).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : '';
   $('#stBadge').className='badge '+(o?'b-open':'b-close');
   $('#stBadge').textContent = o ? ('● Đang mở'+(hc?' · hạn '+hc:'')) : '● Đã khóa nhập liệu';
-  $('#modeBadge').innerHTML = isDemo ? '<span class="badge b-wait" title="Dữ liệu chỉ lưu trên trình duyệt này">Chế độ dùng thử</span>' : '<span class="badge b-open" title="Dữ liệu lưu trên Google Sheet">Google Sheet</span>';
+  $('#modeBadge').innerHTML = isDemo ? '<span class="badge b-wait" title="Dữ liệu chỉ lưu trên trình duyệt này">Chế độ dùng thử</span>' : (MODE==='sb'?'<span class="badge b-open" title="Dữ liệu lưu trên Supabase">Supabase</span>':'<span class="badge b-open" title="Dữ liệu lưu trên Google Sheet">Google Sheet</span>');
   $('#btnAdmin').textContent = ADMIN ? '⚙ Quản trị (đã đăng nhập)' : '🔒 Quản trị';
   let n='';
   if(c.thong_bao) n+=`<div class="notice info">📢 ${esc(c.thong_bao)}</div>`;
@@ -268,6 +292,7 @@ function renderHead(){
   const sel=$('#selKhoa'), cur=sel.value||ls('cgkt_khoa')||'';
   sel.innerHTML='<option value="">— Chọn khoa/phòng —</option>'+S.khoa.map(k=>`<option value="${k.id}">${esc(k.ten)}</option>`).join('');
   sel.value = S.khoa.some(k=>k.id===cur)?cur:'';
+  if(document.activeElement!==$('#inNguoi')&&document.activeElement!==$('#inSdt')) loadNguoi();
   const mine=S.dang_ky.filter(d=>d.khoa_id===sel.value);
   $('#nPhieu').textContent = mine.length; [1,2,3,4].forEach(p=>$('#n'+p).textContent=mine.filter(d=>plOf(d)===p).length);
 }
@@ -517,7 +542,8 @@ function viewPhieu(){
 let ATAB='tong';
 async function openAdmin(){
   if(!ADMIN){
-    openDlg(`<h3>Đăng nhập quản trị</h3><div class="sub">${isDemo?'Chế độ dùng thử – mật khẩu mặc định: <b>'+esc(CFG.DEMO_ADMIN_PASSWORD)+'</b>':'Mật khẩu quản trị (ADMIN_PW trong Apps Script)'}</div>
+    openDlg(`<h3>Đăng nhập quản trị</h3><div class="sub">${isDemo?'Chế độ dùng thử – mật khẩu mặc định: <b>'+esc(CFG.DEMO_ADMIN_PASSWORD)+'</b>':MODE==='sb'?'Tài khoản quản trị Supabase':'Mật khẩu quản trị (ADMIN_PW trong Apps Script)'}</div>
+      ${MODE==='sb'?'<div class="fld"><label>Email</label><input type="email" id="aEm"></div>':''}<div style="display:none"></div>
       <div class="fld"><label>Mật khẩu</label><input type="password" id="aPw"></div>
       <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="aOK">Đăng nhập</button></div>`);
     $('#aPw').focus(); $('#aPw').onkeydown=e=>{if(e.key==='Enter')$('#aOK').click()};
@@ -729,7 +755,7 @@ function aCH(){
     <div class="fld"><label>Hạn chót (sau thời điểm này tự khóa)</label><input type="datetime-local" id="cHan" value="${hc}"></div>
     <div class="fld"><label>Thông báo hiển thị đầu trang</label><textarea id="cTB">${esc(c.thong_bao||'')}</textarea></div>
     <button class="btn pri" id="cSave">Lưu cấu hình</button></div>
-    <div class="card"><b>Dữ liệu</b><p class="muted">Chế độ: ${isDemo?'<b>dùng thử</b> – dữ liệu lưu trên trình duyệt này, người khác không thấy. Dán GSHEET_URL trong file để dùng nhiều người.':'<b>Google Sheet</b> – dùng chung cho mọi máy.'}</p>
+    <div class="card"><b>Dữ liệu</b><p class="muted">Chế độ: ${isDemo?'<b>dùng thử</b> – dữ liệu lưu trên trình duyệt này, người khác không thấy. Dán GSHEET_URL trong file để dùng nhiều người.':(MODE==='sb'?'<b>Supabase</b>':'<b>Google Sheet</b>')+' – dùng chung cho mọi máy.'}</p>
     <div class="tools"><button class="btn" id="cBK">⬇ Sao lưu JSON</button><label class="btn" style="margin:0;color:inherit">⬆ Khôi phục JSON<input type="file" id="cRS" accept=".json" hidden></label></div>
     <div class="tools"><button class="btn" id="cSeed">Nạp lại danh mục mẫu (BV Phổi TƯ + Kiến An)</button></div>
     <div class="tools"><button class="btn dan" id="cClr">Xóa toàn bộ đăng ký của các khoa</button></div></div></div>`;
@@ -826,15 +852,21 @@ function sheetTongQuan(wb){
 /* ================= KHỞI ĐỘNG ================= */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{TAB=t.dataset.t;render()});
 $('#selKhoa').onchange=e=>{ls('cgkt_khoa',e.target.value);render()};
-$('#inNguoi').oninput=e=>ls('cgkt_nguoi',e.target.value); $('#inSdt').oninput=e=>ls('cgkt_sdt',e.target.value);
+function loadNguoi(){
+  const k=curKhoa(), n=$('#inNguoi'), p=$('#inSdt');
+  n.disabled=p.disabled=!k; n.placeholder=k?'Họ tên người khai':'Chọn khoa/phòng trước'; p.placeholder=k?'SĐT liên hệ':'Chọn khoa/phòng trước';
+  if(!k){n.value=p.value='';return}
+  const last=S.dang_ky.filter(d=>d.khoa_id===k&&(d.nguoi_khai||d.sdt)).sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')))[0]||{};
+  n.value=ls('cgkt_nguoi_'+k)??last.nguoi_khai??''; p.value=ls('cgkt_sdt_'+k)??last.sdt??'';
+}
+$('#inNguoi').oninput=e=>curKhoa()&&ls('cgkt_nguoi_'+curKhoa(),e.target.value); $('#inSdt').oninput=e=>curKhoa()&&ls('cgkt_sdt_'+curKhoa(),e.target.value);
 $('#btnAdmin').onclick=openAdmin;
-$('#btnPrint').onclick=()=>{TAB='phieu';render();setTimeout(()=>window.print(),200)};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDlg()});
 window.addEventListener('beforeunload',e=>{ if(SYNC_N){ e.preventDefault(); e.returnValue=''; } });
-document.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible' && DB===GSDB && LOADED && !SYNC_N && !$('#ovl').classList.contains('on')){ try{ await loadAll(true); render(); }catch(e){} } });
+document.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible' && DB.remote && LOADED && !SYNC_N && !$('#ovl').classList.contains('on')){ try{ await loadAll(true); render(); }catch(e){} } });
 (async function init(){
-  $('#inNguoi').value=ls('cgkt_nguoi')||''; $('#inSdt').value=ls('cgkt_sdt')||'';
   try{
+    if(MODE==='sb') sb=supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY);
     await loadAll(); ADMIN=await DB.isAdmin();
     if(isDemo) await seedIfEmpty(false);
     const OLD_KHOA=['Khoa Khám bệnh','Khoa Cấp cứu – Hồi sức tích cực','Khoa Lao','Khoa Bệnh phổi'];
