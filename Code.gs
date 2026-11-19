@@ -21,7 +21,8 @@ const TABLES = {
   ky_thuat: ['id','ten','chuyen_nganh','duyet','de_xuat_khoa','created_at'],
   lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet'],
   dang_ky:  ['id','khoa_id','loai','ky_thuat_id','lua_chon_id','don_vi_id','ten_kt','don_vi_nhan','huong','don_vi_khac','chuyen_khoa',
-             'hinh_thuc','so_nguoi','doi_tuong','thoi_gian','ghi_chu','nguoi_khai','sdt','created_at','updated_at']
+             'hinh_thuc','so_nguoi','doi_tuong','thoi_gian','ghi_chu','nguoi_khai','sdt','created_at','updated_at',
+             'nhom_dt','loai_dt','ho_ten','chuc_danh','so_thang','co_so_dt','kinh_phi']
 };
 const BOOL = {mo:1, duyet:1};
 const NUM  = {so_nguoi:1, thu_tu:1};
@@ -139,7 +140,7 @@ function check_(req){
   if(!isOpen_()) throw new Error('Đã khóa nhập liệu');
   if(t === 'dang_ky'){
     const tuyen = {}; readT_('don_vi').forEach(d => tuyen[d.id] = d.tuyen);
-    const plOf = r => r.loai === 'kc' ? String(r.huong || '') : r.loai === 'cg' ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
+    const plOf = r => r.loai === 'kc' ? String(r.huong || '') : r.loai === 'dt' ? '5' : r.loai === 'cg' ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
     const need = pl => { if(pl && !plOn_(pl)) throw new Error('Phụ lục ' + pl + ' đang đóng'); };
     if(a === 'insert'){ [].concat(req.rows).forEach(r => need(plOf(r))); return true; }
     if(a === 'update' || a === 'remove'){
@@ -173,6 +174,7 @@ function buildView_(){
     let pl, ten, a, b;
     if(d.loai === 'nhan'){ pl = v.tuyen === 'TW' ? 'PL1' : 'PL2'; ten = t.ten; a = v.ten; b = me; }
     else if(d.loai === 'cg'){ pl = 'PL3'; ten = d.ten_kt; a = me; b = d.don_vi_nhan; }
+    else if(d.loai === 'dt'){ pl = 'PL5'; ten = [d.loai_dt, d.chuyen_khoa].filter(Boolean).join(' – ') + (d.ho_ten ? ' (' + d.ho_ten + ')' : ''); a = d.co_so_dt; b = me; }
     else if(d.loai === 'kc'){ pl = 'PL' + d.huong; ten = d.ten_kt || 'Không có nhu cầu'; a = ''; b = me; }
     else { pl = 'PL4'; ten = 'Chuyên khoa: ' + d.chuyen_khoa; a = d.huong === 'nhan' ? d.don_vi_khac : me; b = d.huong === 'nhan' ? me : d.don_vi_khac; }
     return [kh, pl, t.chuyen_nganh || '', ten || '', a || '', b || '', d.hinh_thuc || '', d.so_nguoi == null ? '' : d.so_nguoi, d.doi_tuong || '', d.thoi_gian || '',
