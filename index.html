@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khảo sát nhu cầu CGKT & hỗ trợ chuyên môn 2027 – BV Phổi Hải Phòng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{--navy:#002060;--blue:#0C4F9C;--sky:#5B9BD5;--green:#1E8E5A;--orange:#E87A1E;--red:#C00000;--teal:#138D90;--purple:#6A4C9C;
+--text:#1F2A3C;--grey:#5F6B7A;--line:#DCE4EE;--bg:#F4F7FB;--ice:#E8F0FA;--mint:#E6F4EC;--peach:#FDF0E4;--pink:#FBEAEA;--lav:#EFEAF7}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:var(--text);background:var(--bg);font-size:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.hwrap{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.ttl b{display:block;color:var(--navy);font-size:16px}.ttl span{color:var(--grey);font-size:12.5px}
+.sp{flex:1}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.b-open{background:var(--mint);color:var(--green)}.b-close{background:var(--pink);color:var(--red)}
+.b-wait{background:var(--peach);color:var(--orange)}.b-blue{background:var(--ice);color:var(--blue)}.b-lav{background:var(--lav);color:var(--purple)}
+.btn{border:1px solid var(--line);background:#fff;padding:7px 14px;border-radius:9px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--sky)}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}.btn.pri:hover{background:var(--navy)}
+.btn.gr{background:var(--green);border-color:var(--green);color:#fff}
+.btn.dan{color:var(--red)}.btn.sm{padding:4px 10px;font-size:12.5px;border-radius:7px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+main{max-width:1280px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.who{display:grid;grid-template-columns:2fr 1.4fr 1fr auto;gap:10px;align-items:end}
+label{display:block;font-size:12.5px;color:var(--grey);margin-bottom:4px;font-weight:500}
+input[type=text],input[type=number],input[type=password],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+input:focus,select:focus,textarea:focus{outline:2px solid #BFD6F2;border-color:var(--sky)}
+textarea{resize:vertical;min-height:60px}
+.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
+.tab{padding:9px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--grey)}
+.tab.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--ice);color:var(--blue);font-size:12px}
+.tab.on .n{background:#fff}
+.lay{display:grid;grid-template-columns:270px 1fr;gap:14px}
+.side{position:sticky;top:76px;align-self:start;max-height:calc(100vh - 90px);overflow:auto}
+.cn{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px}
+.cn:hover{background:var(--ice)}.cn.on{background:var(--ice);color:var(--navy);font-weight:600}
+.cn small{color:var(--grey)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tools input[type=text]{flex:1;min-width:220px}.tools select{width:auto}
+.grp{font-weight:700;color:var(--navy);margin:18px 0 8px;font-size:14.5px;display:flex;align-items:center;gap:8px}
+.grp:before{content:"";width:4px;height:16px;border-radius:2px;background:var(--red)}
+.kt{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.kt.mine{border-color:var(--green);box-shadow:0 0 0 1px var(--green) inset}
+.kth{display:flex;gap:10px;align-items:flex-start}
+.kth b{flex:1;font-size:14.5px}
+.offs{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.offs td{padding:6px 8px;border-top:1px dashed var(--line);vertical-align:middle}
+.offs td.u{font-weight:600;color:var(--blue);width:190px}
+.offs td.f{white-space:nowrap;text-align:right;color:var(--grey)}
+.offs td.a{width:80px;text-align:right}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+.tbl th{background:var(--ice);color:var(--navy);text-align:left;padding:8px;font-weight:600;position:sticky;top:0}
+.tbl td{padding:7px 8px;border-top:1px solid var(--line);vertical-align:top}
+.tbl tr:hover td{background:#FAFCFF}
+.empty{padding:30px;text-align:center;color:var(--grey)}
+.muted{color:var(--grey);font-size:12.5px}
+.row{display:grid;gap:10px;grid-template-columns:1fr 1fr}.row3{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr}
+.fld{margin-bottom:10px}
+.ovl{position:fixed;inset:0;background:rgba(15,30,60,.38);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:40px 12px}
+.ovl.on{display:flex}
+.dlg{background:#fff;border-radius:16px;width:100%;max-width:640px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.dlg.wide{max-width:1200px}
+.dlg h3{margin:0 0 4px;color:var(--navy)}
+.dlg .sub{color:var(--grey);font-size:13px;margin-bottom:14px}
+.dft{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.sugg{border:1px solid var(--line);border-radius:10px;margin:-4px 0 10px;overflow:hidden}
+.sugg div{padding:7px 10px;font-size:13px;cursor:pointer;border-top:1px solid var(--line)}
+.sugg div:first-child{border-top:0;background:var(--peach);color:var(--orange);font-weight:600;cursor:default}
+.sugg div:hover:not(:first-child){background:var(--ice)}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpi{border-radius:12px;padding:12px;background:var(--ice)}
+.kpi b{display:block;font-size:24px;color:var(--navy)}.kpi span{font-size:12px;color:var(--grey)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;z-index:99;display:none}
+.notice{background:var(--peach);border:1px solid #F6D3B2;color:#8a4a10;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px}
+.notice.info{background:var(--ice);border-color:#C9DCF3;color:var(--navy)}
+.atabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:8px 0 14px;flex-wrap:wrap}
+.atab{padding:8px 14px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600;color:var(--grey)}
+.atab.on{color:var(--navy);border-color:var(--red)}
+.scroll{max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.chip{display:inline-block;padding:1px 8px;border-radius:99px;background:var(--ice);color:var(--blue);font-size:11.5px;margin:1px 2px}
+@media(max-width:900px){.lay{grid-template-columns:1fr}.side{position:static;max-height:none}.who{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:repeat(3,1fr)}.row,.row3{grid-template-columns:1fr}.offs td.u{width:auto}}
+@media print{header,.tabs,.noprint{display:none!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<header><div class="hwrap">
+  <div class="logo">BVP</div>
+  <div class="ttl"><b>Khảo sát nhu cầu chuyển giao kỹ thuật & hỗ trợ chuyên môn năm 2027</b><span>Bệnh viện Phổi Hải Phòng · theo CV 13256/SYT-NVY ngày 17/11/2026</span></div>
+  <div class="sp"></div>
+  <span id="stBadge" class="badge"></span>
+  <span id="modeBadge"></span>
+  <button class="btn" id="btnAdmin">🔒 Quản trị</button>
+</div></header>
+
+<main>
+  <div id="notice"></div>
+  <div class="card who">
+    <div><label>Khoa / Phòng *</label><select id="selKhoa"></select></div>
+    <div><label>Người khai</label><input type="text" id="inNguoi" placeholder="Họ tên"></div>
+    <div><label>Điện thoại</label><input type="text" id="inSdt" placeholder="SĐT liên hệ"></div>
+    <div><button class="btn" id="btnPrint" title="In phiếu của khoa">🖨 In phiếu</button></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab on" data-t="tw">① Nhận từ Trung ương <span class="muted" style="color:inherit;font-weight:400">(PL1)</span> <span class="n" id="n1">0</span></div>
+    <div class="tab" data-t="tp">② Nhận từ tuyến TP <span class="muted" style="color:inherit;font-weight:400">(PL2)</span> <span class="n" id="n2">0</span></div>
+    <div class="tab" data-t="cg">③ Chuyển giao tuyến dưới <span class="muted" style="color:inherit;font-weight:400">(PL3)</span> <span class="n" id="n3">0</span></div>
+    <div class="tab" data-t="lp">④ Cán bộ luân phiên <span class="muted" style="color:inherit;font-weight:400">(PL4)</span> <span class="n" id="n4">0</span></div>
+    <div class="tab" data-t="phieu">Phiếu của khoa <span class="n" id="nPhieu">0</span></div>
+  </div>
+  <div id="view"></div>
+</main>
+
+<div class="ovl" id="ovl"><div class="dlg" id="dlg"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= CẤU HÌNH =================
+   Để trống GSHEET_URL => chế độ DÙNG THỬ (lưu trên trình duyệt này).
+   Dán URL ứng dụng web Apps Script (…/exec) => dữ liệu lưu chung trên Google Sheet. */
+const CFG = {
+  GSHEET_URL: 'https://script.google.com/macros/s/AKfycbyPjNoSMfyboH_egG9EHWeg1I0PzWyYd4fMRQOzpiITdjcvJ6locUO2DFCdoMYPMrvBRQ/exec',
+  TEN_BV: 'Bệnh viện Phổi Hải Phòng',
+  DEMO_ADMIN_PASSWORD: 'admin'
+};
+const SEED_CATALOG = [{"nguon_tt":"1","chuyen_nganh":"Nội soi chẩn đoán và can thiệp","ten":"Kỹ thuật Nội soi phế quản ống mềm","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"2","chuyen_nganh":"Nội soi chẩn đoán và can thiệp","ten":"Trợ giúp nội soi phế quản ống mềm và chăm sóc người bệnh nội soi","doi_tuong":"Điều dưỡng, Y sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"3","chuyen_nganh":"Nội soi chẩn đoán và can thiệp","ten":"Kỹ thuật Nội soi màng phổi ống mềm","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"4","chuyen_nganh":"Nội soi chẩn đoán và can thiệp","ten":"Trợ giúp nội soi màng phổi ống mềm và chăm sóc người bệnh nội soi","doi_tuong":"Điều dưỡng, Y sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"5","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Thăm dò chức năng hô hấp cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"4.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"6","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Thăm dò chức năng hô hấp cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"4.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"7","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Thăm dò chức năng hô hấp nâng cao","doi_tuong":"Bác sĩ đã có chứng chỉ đào tạo thăm dò chức năng hô hấp cơ bản","thoi_gian":"02 tháng","goi":"Nâng cao","hoc_phi":"5.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"8","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Đo chức năng hô hấp cơ bản","doi_tuong":"Y sĩ, Điều dưỡng, Kỹ thuật y","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"9","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Đo chức năng hô hấp cơ bản","doi_tuong":"Y sĩ, Điều dưỡng, Kỹ thuật y","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"4.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"10","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Các kỹ thuật đo chức năng hô hấp nâng cao (TLC, DlCO, FeNO, kháng lực đường thở Raw, IOS, FOT)","doi_tuong":"Y sĩ, Điều dưỡng, Kỹ thuật y đã có chứng chỉ đào tạo đo chức năng hô hấp cơ bản","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"11","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Phục hồi chức năng hô hấp cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"12","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Phục hồi chức năng hô hấp cơ bản","doi_tuong":"Y sĩ, Điều dưỡng, Kỹ thuật y","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"13","chuyen_nganh":"Thăm dò và phục hồi chức năng hô hấp","ten":"Tư vấn Hen - COPD","doi_tuong":"Bác sĩ, Y sĩ, Điều dưỡng, Kỹ thuật y","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"3.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"14","chuyen_nganh":"Cấp cứu","ten":"Cấp cứu các bệnh lý hô hấp cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"15","chuyen_nganh":"Cấp cứu","ten":"Chăm sóc người bệnh cấp cứu các bệnh lý hô hấp cơ bản","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"16","chuyen_nganh":"Hồi sức tích cực","ten":"Hồi sức tích cực các bệnh lý hô hấp cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"17","chuyen_nganh":"Hồi sức tích cực","ten":"Hồi sức tích cực các bệnh lý hô hấp nâng cao","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"18","chuyen_nganh":"Hồi sức tích cực","ten":"Kiểm soát đường thở cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"19","chuyen_nganh":"Hồi sức tích cực","ten":"Thở máy trong Hồi sức tích cực các bệnh lý hô hấp","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"20","chuyen_nganh":"Hồi sức tích cực","ten":"Điều dưỡng Hồi sức tích cực các bệnh lý hô hấp cơ bản","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"21","chuyen_nganh":"Hồi sức tích cực","ten":"Điều dưỡng Hồi sức tích cực các bệnh lý hô hấp nâng cao","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"22","chuyen_nganh":"Hồi sức tích cực","ten":"Chăm sóc người bệnh thở máy cơ bản","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"23","chuyen_nganh":"Hồi sức tích cực","ten":"Chăm sóc vết loét/vết thương nhiễm trùng nâng cao ở người bệnh thở máy","doi_tuong":"Điều dưỡng","thoi_gian":"02 tháng","goi":"Nâng cao","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"24","chuyen_nganh":"Gây mê hồi sức","ten":"Bác sĩ gây mê hồi sức trong phẫu thuật lồng ngực","doi_tuong":"Bác sĩ có học chứng chỉ chuyên khoa gây mê","thoi_gian":"03 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"24","chuyen_nganh":"Gây mê hồi sức","ten":"Bác sĩ gây mê hồi sức trong phẫu thuật lồng ngực","doi_tuong":"Bác sĩ đa khoa","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"25","chuyen_nganh":"Gây mê hồi sức","ten":"Đào tạo điều dưỡng hồi tỉnh, hồi sức sau phẫu thuật lồng ngực","doi_tuong":"Điều dưỡng, Kỹ thuật y","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"26","chuyen_nganh":"Gây mê hồi sức","ten":"Đào tạo điều dưỡng gây mê hồi sức trong phẫu thuật lồng ngực từ điều dưỡng chăm sóc","doi_tuong":"Điều dưỡng","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"27","chuyen_nganh":"Gây mê hồi sức","ten":"Điều dưỡng dụng cụ trong phẫu thuật lồng ngực - lao cột sống","doi_tuong":"Điều dưỡng, Kỹ thuật y","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"28","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Một số kỹ thuật mổ nội soi lồng ngực cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"29","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Ung thư phế quản nguyên phát: chỉ định và kỹ thuật mổ","doi_tuong":"Bác sĩ","thoi_gian":"06 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"30","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Nguyên tắc cơ bản và kỹ thuật phẫu thuật mạch máu lồng ngực","doi_tuong":"Bác sĩ","thoi_gian":"06 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"31","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Ổ cặn màng phổi: chỉ định và kỹ thuật mổ","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"32","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Chẩn đoán và điều trị tràn khí màng phổi","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"33","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Tràn máu màng phổi: chẩn đoán và xử trí","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"34","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Mủ màng phổi: chẩn đoán và xử trí","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"35","chuyen_nganh":"Phẫu thuật lồng ngực","ten":"Chuẩn bị người bệnh trước mổ và chăm sóc người bệnh sau mổ","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"36","chuyen_nganh":"Ngoại tổng hợp – Lao xương khớp","ten":"Phẫu thuật cơ bản điều trị lao xương khớp chi trên","doi_tuong":"Bác sĩ đa khoa","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"37","chuyen_nganh":"Ngoại tổng hợp – Lao xương khớp","ten":"Phẫu thuật cơ bản điều trị lao xương khớp chi dưới","doi_tuong":"Bác sĩ đa khoa; Bác sĩ ngoại khoa","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"38","chuyen_nganh":"Ngoại tổng hợp – Lao xương khớp","ten":"Phẫu thuật cơ bản điều trị lao cột sống","doi_tuong":"Bác sĩ đa khoa; Bác sĩ ngoại khoa","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"39","chuyen_nganh":"Ngoại tổng hợp – Lao xương khớp","ten":"Chẩn đoán và điều trị lao xương khớp","doi_tuong":"Bác sĩ đa khoa; Bác sĩ ngoại khoa","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"40","chuyen_nganh":"Ngoại tổng hợp – Lao xương khớp","ten":"Phẫu thuật chuyên sâu điều trị các bệnh lý lao cột sống","doi_tuong":"Bác sĩ đa khoa; Bác sĩ ngoại khoa","thoi_gian":"06 tháng","goi":"Chuyên sâu","hoc_phi":"5.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"41","chuyen_nganh":"Ngoại tổng hợp – Lao xương khớp","ten":"Phẫu thuật thay thế trong điều trị lao xương khớp","doi_tuong":"Bác sĩ đa khoa; Bác sĩ ngoại khoa","thoi_gian":"06 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"42","chuyen_nganh":"Lao hô hấp","ten":"Thực hành chẩn đoán và điều trị bệnh Mycobacterium không lao (NTM – Non Tuberculosis Mycobacterium)","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"43","chuyen_nganh":"Lao hô hấp","ten":"Chẩn đoán và điều trị test kích thích giải mẫn cảm người bệnh ADR thuốc lao","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"44","chuyen_nganh":"Lao hô hấp","ten":"Thực hành chăm sóc theo dõi giải mẫn cảm thuốc lao","doi_tuong":"Điều dưỡng","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"45","chuyen_nganh":"Bệnh phổi mạn tính (Hen – COPD)","ten":"Hướng dẫn chẩn đoán điều trị hen và bệnh phổi tắc nghẽn mạn tính","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"46","chuyen_nganh":"Bệnh phổi nghề nghiệp","ten":"Bệnh bụi phổi","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"47","chuyen_nganh":"Bệnh phổi nghề nghiệp","ten":"Kỹ thuật đọc phim bụi phổi","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"48","chuyen_nganh":"Bệnh phổi nghề nghiệp","ten":"Rửa phổi toàn bộ","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"48","chuyen_nganh":"Bệnh phổi nghề nghiệp","ten":"Rửa phổi toàn bộ","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"49","chuyen_nganh":"Nội tổng hợp","ten":"Tiếp cận chẩn đoán lao ngoài phổi (một số thể hay gặp)","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"50","chuyen_nganh":"Nội tổng hợp","ten":"Chăm sóc và theo dõi người bệnh lao màng não","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"51","chuyen_nganh":"Nội tổng hợp","ten":"Thủ thuật xâm nhập lấy bệnh phẩm","doi_tuong":"01 kíp gồm 01 Bác sĩ và 01 Điều dưỡng","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"52","chuyen_nganh":"Nội tổng hợp","ten":"Kỹ thuật sinh thiết màng phổi mù","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"53","chuyen_nganh":"Bệnh phổi hiếm và nhiễm khuẩn hô hấp","ten":"Hướng dẫn xử trí tràn dịch màng phổi một bên ở người lớn","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"54","chuyen_nganh":"Bệnh phổi hiếm và nhiễm khuẩn hô hấp","ten":"Hướng dẫn xử trí tràn khí màng phổi tự phát","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"55","chuyen_nganh":"Bệnh phổi hiếm và nhiễm khuẩn hô hấp","ten":"Hướng dẫn và chẩn đoán tắc mạch phổi","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"56","chuyen_nganh":"Bệnh phổi hiếm và nhiễm khuẩn hô hấp","ten":"Hướng dẫn chẩn đoán và điều trị bệnh mô kẽ","doi_tuong":"Bác sĩ","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"57","chuyen_nganh":"Bệnh phổi hiếm và nhiễm khuẩn hô hấp","ten":"Hướng dẫn chẩn đoán nấm phổi aspergillus","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"58","chuyen_nganh":"Nhi khoa","ten":"Chẩn đoán và điều trị lao trẻ em","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"59","chuyen_nganh":"Nhi khoa","ten":"Đào tạo các kỹ thuật điều dưỡng cơ bản về lao trẻ em","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"60","chuyen_nganh":"Ung bướu","ten":"Chẩn đoán và điều trị ung thư phế quản không tế bào nhỏ","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"61","chuyen_nganh":"Ung bướu","ten":"Chẩn đoán và điều trị ung thư phế quản tế bào nhỏ","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"62","chuyen_nganh":"Ung bướu","ten":"Chăm sóc giảm nhẹ người bệnh ung thư phế quản giai đoạn cuối","doi_tuong":"Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"63","chuyen_nganh":"Dinh dưỡng và tiết chế","ten":"Dinh dưỡng lâm sàng cơ bản","doi_tuong":"Bác sĩ, Cử nhân dinh dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"64","chuyen_nganh":"Dinh dưỡng và tiết chế","ten":"Triển khai cung ứng báo ăn bệnh viện","doi_tuong":"Bác sĩ, Cử nhân dinh dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"65","chuyen_nganh":"Dinh dưỡng và tiết chế","ten":"Dinh dưỡng lâm sàng nâng cao","doi_tuong":"Bác sĩ, Cử nhân dinh dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"66","chuyen_nganh":"Vi sinh – Labo lao","ten":"AFB trực tiếp nhuộm huỳnh quang","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"67","chuyen_nganh":"Vi sinh – Labo lao","ten":"AFB trực tiếp nhuộm Ziehl-Neelsen","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"68","chuyen_nganh":"Vi sinh – Labo lao","ten":"Mycobacterium tuberculosis định danh và kháng RMP Xpert","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"01 tuần","goi":"Cơ bản","hoc_phi":"2.000.000/học viên/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"69","chuyen_nganh":"Vi sinh – Labo lao","ten":"An toàn sinh học phòng xét nghiệm","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"02 tuần","goi":"Cơ bản","hoc_phi":"3.000.000/học viên/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"70","chuyen_nganh":"Vi sinh – Labo lao","ten":"Nuôi cấy vi khuẩn lao","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"71","chuyen_nganh":"Vi sinh – Labo lao","ten":"Nuôi cấy, định danh vi khuẩn lao","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"01 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"72","chuyen_nganh":"Vi sinh – Labo lao","ten":"Kháng sinh đồ vi khuẩn lao","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"03 tháng","goi":"Chuyên sâu","hoc_phi":"5.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"73","chuyen_nganh":"Vi sinh – Labo lao","ten":"Mycobacterium tuberculosis đa kháng/siêu kháng LPA","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"02 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"74","chuyen_nganh":"Vi sinh – Labo lao","ten":"Nuôi cấy, định danh và kháng sinh đồ vi khuẩn","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"75","chuyen_nganh":"Vi sinh – Labo lao","ten":"Định danh và kháng sinh đồ vi khuẩn","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"01 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"76","chuyen_nganh":"Vi sinh – Labo lao","ten":"Vi sinh lâm sàng cơ bản","doi_tuong":"Bác sĩ, Cử nhân sinh học, Kỹ thuật y xét nghiệm","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"77","chuyen_nganh":"Vi sinh – Labo lao","ten":"MTB Quantiferon","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"02 tuần","goi":"Cơ bản","hoc_phi":"3.000.000/học viên/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"78","chuyen_nganh":"Vi sinh – Labo lao","ten":"Xpert SARS-CoV-2","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"01 tuần","goi":"Cơ bản","hoc_phi":"3.000.000/học viên/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"79","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Kỹ thuật chụp X quang thường qui cơ bản","doi_tuong":"Kỹ thuật y, điều dưỡng, Y sỹ đa khoa","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"80","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Kỹ thuật chụp X quang thường qui nâng cao","doi_tuong":"Kỹ thuật y, điều dưỡng, Y sỹ đa khoa (đã có Chứng chỉ X quang cơ bản)","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"81","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Chẩn đoán hình ảnh bằng X quang qui ước","doi_tuong":"Bác sĩ đa khoa, BS CK lao, Bệnh phổi; BS Hô hấp","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"82","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Đọc phim X quang ngực","doi_tuong":"Bác sĩ đa khoa, BS CK lao, Bệnh phổi; BS Hô hấp","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"83","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Kỹ thuật chụp cắt lớp vi tính cơ bản","doi_tuong":"Chứng chỉ chẩn đoán hình ảnh; điều dưỡng, Y sỹ (đã có Chứng chỉ X quang thường qui cơ bản)","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"84","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Kỹ thuật chụp cắt lớp vi tính nâng cao","doi_tuong":"Kỹ thuật y chẩn đoán hình ảnh; điều dưỡng; Y sỹ (đã có CC kỹ thuật chụp cắt lớp vi tính cơ bản)","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"85","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Chẩn đoán hình ảnh bằng cắt lớp vi tính cơ bản","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"86","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Chẩn đoán hình ảnh bằng cắt lớp vi tính nâng cao","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp (đã có CC Chẩn đoán hình ảnh bằng cắt lớp vi tính cơ bản)","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"87","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Kỹ thuật chụp cộng hưởng từ","doi_tuong":"Kỹ thuật y chẩn đoán hình ảnh","thoi_gian":"03 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"88","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Chẩn đoán hình ảnh bằng cộng hưởng từ","doi_tuong":"Bác sĩ chuyên khoa chẩn đoán hình ảnh","thoi_gian":"03 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"89","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Điện quang can thiệp ngực","doi_tuong":"Bác sĩ chuyên khoa chẩn đoán hình ảnh","thoi_gian":"06 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"90","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Trợ giúp điện quang can thiệp ngực","doi_tuong":"Kỹ thuật y chẩn đoán hình ảnh; điều dưỡng, Y sỹ","thoi_gian":"06 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"91","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Siêu âm tim","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"92","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Siêu âm tổng quát bụng/ khoang sau phúc mạc","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"93","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Siêu âm ngực","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"94","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Siêu âm Doppler mạch máu","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp (đã có CC siêu âm tim hoặc siêu âm tổng quát OB/ khoang sau phúc mạc)","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"95","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Sinh thiết phổi/ màng phổi dưới hướng dẫn cắt lớp vi tính","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"96","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Trợ giúp sinh thiết phổi/ màng phổi dưới hướng dẫn cắt lớp vi tính","doi_tuong":"Kỹ thuật y chẩn đoán hình ảnh; điều dưỡng, Y sỹ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"97","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Điều trị đốt u phổi bằng vi sóng (MWA)","doi_tuong":"Bác sĩ chuyên khoa CĐHA, BS đa khoa, BS CK Lao – Bệnh phổi, BS Hô hấp","thoi_gian":"03 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"98","chuyen_nganh":"Chẩn đoán hình ảnh và y học hạt nhân","ten":"Trợ giúp điều trị đốt u phổi bằng vi sóng (MWA)","doi_tuong":"Kỹ thuật y chẩn đoán hình ảnh; điều dưỡng, Y sỹ","thoi_gian":"03 tháng","goi":"Chuyên sâu","hoc_phi":"7.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"99","chuyen_nganh":"Hóa sinh miễn dịch","ten":"Kỹ thuật xét nghiệm hóa sinh lâm sàng cơ bản","doi_tuong":"Bác sĩ, Dược sĩ, Điều dưỡng, Kỹ thuật y, Cử nhân sinh học","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"100","chuyen_nganh":"Hóa sinh miễn dịch","ten":"Kỹ thuật xét nghiệm hóa sinh lâm sàng nâng cao","doi_tuong":"Bác sĩ, Dược sĩ, Điều dưỡng, Kỹ thuật y, Cử nhân sinh học đã có chứng chỉ xét nghiệm hóa sinh lâm sàng cơ bản","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"101","chuyen_nganh":"Huyết học truyền máu","ten":"Kỹ thuật xét nghiệm huyết học cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"102","chuyen_nganh":"Huyết học truyền máu","ten":"Kỹ thuật xét nghiệm huyết học cơ bản","doi_tuong":"CN KTYH, CNSH, Kỹ thuật y, Điều dưỡng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"103","chuyen_nganh":"Huyết học truyền máu","ten":"Kỹ thuật xét nghiệm huyết học nâng cao","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"6.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"104","chuyen_nganh":"Huyết học truyền máu","ten":"Kỹ thuật xét nghiệm huyết học nâng cao","doi_tuong":"CN KTYH, CNSH, Kỹ thuật y, Điều dưỡng","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"5.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"105","chuyen_nganh":"Huyết học truyền máu","ten":"Kỹ thuật xét nghiệm hòa hợp truyền máu cơ bản","doi_tuong":"Bác sĩ, Kỹ thuật y","thoi_gian":"02 tháng","goi":"Cơ bản","hoc_phi":"4.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"106","chuyen_nganh":"Huyết học truyền máu","ten":"Kỹ thuật xét nghiệm hòa hợp truyền máu cơ bản","doi_tuong":"CN KTYH, CNSH, Kỹ thuật y, Điều dưỡng","thoi_gian":"02 tháng","goi":"Cơ bản","hoc_phi":"3.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"107","chuyen_nganh":"Giải phẫu bệnh và sinh học phân tử","ten":"Chẩn đoán mô bệnh và tế bào bệnh một số bệnh thường gặp trong chuyên khoa lao và bệnh phổi","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"108","chuyen_nganh":"Giải phẫu bệnh và sinh học phân tử","ten":"Chẩn đoán xác định và phân biệt một số bệnh khó của chuyên ngành dựa vào hoá mô miễn dịch, hoá miễn dịch tế bào và hoá mô","doi_tuong":"Bác sĩ","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"109","chuyen_nganh":"Giải phẫu bệnh và sinh học phân tử","ten":"Chẩn đoán tế bào học bong và chọc hút kim nhỏ một số bệnh thường gặp trong chuyên ngành lao và bệnh phổi","doi_tuong":"Bác sĩ, Kỹ thuật y xét nghiệm","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"110","chuyen_nganh":"Giải phẫu bệnh và sinh học phân tử","ten":"Kỹ thuật mô bệnh và tế bào bệnh học thường quy","doi_tuong":"Kỹ thuật y xét nghiệm","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"111","chuyen_nganh":"Giải phẫu bệnh và sinh học phân tử","ten":"Kỹ thuật nhuộm hoá mô miễn dịch bằng máy và bằng tay, kỹ thuật nhuộm hoá mô nâng cao","doi_tuong":"Kỹ thuật y xét nghiệm","thoi_gian":"03 tháng","goi":"Nâng cao","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"112","chuyen_nganh":"Dược","ten":"Thực hành Thông tin Thuốc và Dược lâm sàng trong Bệnh viện","doi_tuong":"Dược sỹ đại học","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"113","chuyen_nganh":"Dược","ten":"Công tác nghiệp vụ dược tại khoa dược bệnh viện","doi_tuong":"Dược sỹ đại học","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"114","chuyen_nganh":"Dược","ten":"Tổ chức kho và cấp phát thuốc tại khoa dược bệnh viện","doi_tuong":"Dược sỹ cao đẳng","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"115","chuyen_nganh":"Dược","ten":"Pha chế, bảo quản thuốc điều trị ung thư","doi_tuong":"Dược sỹ đại học, cao đẳng","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"116","chuyen_nganh":"Kiểm soát nhiễm khuẩn","ten":"Kiểm soát nhiễm khuẩn bệnh viện (dành cho cán bộ chuyên trách)","doi_tuong":"Học viên có trình độ đại học trở lên thuộc khối ngành sức khỏe","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"117","chuyen_nganh":"Kiểm soát nhiễm khuẩn","ten":"Kiểm soát nhiễm khuẩn bệnh viện (dành cho thành viên Hội đồng Kiểm soát nhiễm khuẩn và Mạng lưới Kiểm soát nhiễm khuẩn)","doi_tuong":"Học viên có trình độ đại học","thoi_gian":"05 ngày","goi":"Cơ bản","hoc_phi":"1.200.000/học viên/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"118","chuyen_nganh":"Kiểm soát nhiễm khuẩn","ten":"Giám sát kiểm soát nhiễm khuẩn","doi_tuong":"Học viên có trình độ đại học khối ngành sức khỏe","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"119","chuyen_nganh":"Kiểm soát nhiễm khuẩn","ten":"Khử khuẩn, tiệt khuẩn dụng cụ y tế","doi_tuong":"Học viên có trình độ từ trung cấp trở lên khối ngành sức khỏe","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"120","chuyen_nganh":"Vật tư – Thiết bị y tế","ten":"Bảo dưỡng, sửa chữa trang thiết bị y tế","doi_tuong":"Cán bộ y tế","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"121","chuyen_nganh":"Quản lý chất lượng","ten":"Kiến thức về Quản lý Chất lượng bệnh viện","doi_tuong":"Bác sĩ, điều dưỡng, Kỹ thuật y, cán bộ y tế","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"122","chuyen_nganh":"Quản lý chất lượng","ten":"Xây dựng và đo lường chỉ số chất lượng bệnh viện","doi_tuong":"Bác sĩ, điều dưỡng, Kỹ thuật y, cán bộ y tế","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.500.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"123","chuyen_nganh":"Quản lý chất lượng","ten":"Thiết lập hệ thống báo cáo và xử lý sự cố y khoa","doi_tuong":"Bác sĩ, điều dưỡng, Kỹ thuật y, cán bộ y tế","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"3.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"124","chuyen_nganh":"Điều dưỡng","ten":"Thực hành lâm sàng","doi_tuong":"Điều dưỡng","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"2.000.000","don_vi":"BV_PHOI_TW"},{"nguon_tt":"125","chuyen_nganh":"Điều dưỡng","ten":"Chăm sóc người bệnh mắc bệnh lý hô hấp","doi_tuong":"Điều dưỡng","thoi_gian":"02 tuần","goi":"Cơ bản","hoc_phi":"2.000.000/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"126","chuyen_nganh":"Điều dưỡng","ten":"Chăm sóc giảm nhẹ","doi_tuong":"Điều dưỡng","thoi_gian":"01 tuần","goi":"Cơ bản","hoc_phi":"1.000.000/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"127","chuyen_nganh":"Điều dưỡng","ten":"An toàn người bệnh","doi_tuong":"Điều dưỡng, Kỹ thuật y","thoi_gian":"01 tuần","goi":"Cơ bản","hoc_phi":"1.000.000/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"128","chuyen_nganh":"Điều dưỡng","ten":"Liệu pháp truyền dịch tĩnh mạch","doi_tuong":"Điều dưỡng","thoi_gian":"01 tuần","goi":"Cơ bản","hoc_phi":"1.000.000/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"129","chuyen_nganh":"Điều dưỡng","ten":"Kỹ năng hướng dẫn, tư vấn, giáo dục sức khoẻ","doi_tuong":"Điều dưỡng, Kỹ thuật y","thoi_gian":"01 tuần","goi":"Cơ bản","hoc_phi":"500.000/học viên/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"130","chuyen_nganh":"Quản lý chương trình chống lao","ten":"Quản lý chương trình chống lao","doi_tuong":"Các cán bộ làm công tác chống lao tuyến tỉnh, tuyến trung ương","thoi_gian":"03 tuần","goi":"Cơ bản","hoc_phi":"4.000.000/học viên/khóa","don_vi":"BV_PHOI_TW"},{"nguon_tt":"1","chuyen_nganh":"Hồi sức tích cực","ten":"Hồi sức cấp cứu cơ bản","doi_tuong":"Bác sĩ","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"12.000.000/khóa","don_vi":"BV_KIEN_AN"},{"nguon_tt":"2","chuyen_nganh":"Hồi sức tích cực","ten":"Điều dưỡng Hồi sức tích cực cơ bản","doi_tuong":"Điều dưỡng","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"12.000.000/khóa","don_vi":"BV_KIEN_AN"},{"nguon_tt":"3","chuyen_nganh":"Gây mê hồi sức","ten":"Điều dưỡng Gây mê hồi sức","doi_tuong":"Điều dưỡng","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"15.000.000/khóa","don_vi":"BV_KIEN_AN"},{"nguon_tt":"4","chuyen_nganh":"Gây mê hồi sức","ten":"Kỹ thuật viên dụng cụ","doi_tuong":"Điều dưỡng","thoi_gian":"06 tháng","goi":"Cơ bản","hoc_phi":"15.000.000/khóa","don_vi":"BV_KIEN_AN"},{"nguon_tt":"5","chuyen_nganh":"Tim mạch","ten":"Điện tâm đồ cơ bản","doi_tuong":"Bác sĩ đa khoa và chuyên khoa Hồi sức cấp cứu chưa có chứng chỉ Điện tâm đồ cơ bản","thoi_gian":"01 tháng","goi":"Cơ bản","hoc_phi":"2.500.000/khóa","don_vi":"BV_KIEN_AN"},{"nguon_tt":"6","chuyen_nganh":"Kiểm soát nhiễm khuẩn","ten":"Kiểm soát nhiễm khuẩn cơ bản","doi_tuong":"Cán bộ y tế trực tiếp tham gia KBCB, chăm sóc người bệnh, vệ sinh bệnh viện và cán bộ quản lý chuyên môn","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"4.500.000/khóa","don_vi":"BV_KIEN_AN"},{"nguon_tt":"7","chuyen_nganh":"Điều dưỡng","ten":"Quản lý điều dưỡng cơ bản","doi_tuong":"Điều dưỡng, Hộ sinh, Kỹ thuật viên","thoi_gian":"03 tháng","goi":"Cơ bản","hoc_phi":"4.500.000/khóa","don_vi":"BV_KIEN_AN"}];
+const SEED_DONVI = [
+  {code:'BV_PHOI_TW', ten:'Bệnh viện Phổi Trung ương', tuyen:'TW', ghi_chu:'QĐ 453/QĐ-BVPTƯ ngày 18/3/2026 – Danh mục biểu giá đào tạo 2026'},
+  {code:'BV_KIEN_AN', ten:'Bệnh viện Kiến An', tuyen:'TP', ghi_chu:'TB 48/TB-BVKA ngày 26/3/2026 – Tuyển sinh đào tạo liên tục 2026'}
+];
+const SEED_KHOA = ['Khoa Cấp cứu – Hồi sức tích cực – Chống độc','Khoa Điều trị theo yêu cầu','Khoa Nội I','Khoa Nội II','Khoa Nội III','Khoa Nội V','Khoa Kiểm soát nhiễm khuẩn','Phòng Kế hoạch tổng hợp','Phòng Chỉ đạo tuyến','Phòng Điều dưỡng'];
+const THOI_GIAN = ['Quý I/2027','Quý II/2027','Quý III/2027','Quý IV/2027','6 tháng đầu năm 2027','6 tháng cuối năm 2027','Cả năm 2027', ...Array.from({length:12},(_,i)=>`Tháng ${i+1}/2027`)];
+const HINH_THUC = ['Chuyển giao kỹ thuật','Đào tạo (cử cán bộ đi học)','Hỗ trợ chuyên môn tại đơn vị'];
+const TABLES = ['cau_hinh','khoa','don_vi','ky_thuat','lua_chon','dang_ky'];
+
+/* ================= TIỆN ÍCH ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+const nowIso = () => new Date().toISOString();
+function norm(s){
+  return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g,'d').toLowerCase()
+    .replace(/[^a-z0-9]+/g,' ').trim().replace(/^(ky thuat|dao tao)\s+/,'').trim();
+}
+function bigrams(s){const t=' '+norm(s)+' ',m=new Map();for(let i=0;i<t.length-1;i++){const g=t.slice(i,i+2);m.set(g,(m.get(g)||0)+1)}return m}
+function dice(a,b){const A=bigrams(a),B=bigrams(b);let inter=0,na=0,nb=0;A.forEach(v=>na+=v);B.forEach(v=>nb+=v);A.forEach((v,k)=>{if(B.has(k))inter+=Math.min(v,B.get(k))});return na+nb?2*inter/(na+nb):0}
+function toast(m,ms=2200){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms)}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+/* ================= LỚP DỮ LIỆU ================= */
+let BUSYN=0; function busy(d){BUSYN+=d; const t=$('#toast'); if(BUSYN>0){t.textContent='⏳ Đang lưu lên Google Sheet…';t.style.display='block';document.body.style.pointerEvents='none';document.body.style.cursor='wait'} else {t.style.display='none';document.body.style.pointerEvents='';document.body.style.cursor=''}}
+const isDemo = !CFG.GSHEET_URL;
+const LocalDB = {
+  key:'cgkt2027_demo',
+  _get(){try{return JSON.parse(localStorage.getItem(this.key)||'{}')}catch(e){return {}}},
+  _set(d){localStorage.setItem(this.key,JSON.stringify(d))},
+  async all(t){return this._get()[t]||[]},
+  async insert(t,rows){const d=this._get();rows=[].concat(rows);d[t]=(d[t]||[]).concat(rows);this._set(d);return rows},
+  async update(t,id,patch){const d=this._get();d[t]=(d[t]||[]).map(r=>r.id===id?{...r,...patch}:r);this._set(d)},
+  async updateWhere(t,col,val,patch){const d=this._get();d[t]=(d[t]||[]).map(r=>r[col]===val?{...r,...patch}:r);this._set(d)},
+  async remove(t,id){const d=this._get();d[t]=(d[t]||[]).filter(r=>r.id!==id);this._set(d)},
+  async clear(t){const d=this._get();d[t]=[];this._set(d)},
+  async isAdmin(){return sessionStorage.getItem('cgkt_admin')==='1'},
+  async login(email,pw){if(pw===CFG.DEMO_ADMIN_PASSWORD){sessionStorage.setItem('cgkt_admin','1');return true}throw new Error('Sai mật khẩu')},
+  async logout(){sessionStorage.removeItem('cgkt_admin')}
+};
+const GSDB = {
+  async _post(req){
+    busy(1);
+    try{ return await this.__post(req) } finally { busy(-1) }
+  },
+  async __post(req){
+    const pw=sessionStorage.getItem('cgkt_pw'); if(pw) req.pw=pw;
+    req.khoa_id = req.khoa_id || curKhoa();
+    let r; try{ r=await fetch(CFG.GSHEET_URL,{method:'POST',body:JSON.stringify(req)}) }catch(e){ throw new Error('Không kết nối được Google Sheet') }
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Lỗi máy chủ'); return j;
+  },
+  async allTables(){ const r=await fetch(CFG.GSHEET_URL+(CFG.GSHEET_URL.includes('?')?'&':'?')+'t='+Date.now()); const j=await r.json(); if(!j.ok) throw new Error(j.error); return j.data },
+  async all(t){ return (await this.allTables())[t]||[] },
+  async insert(t,rows){ rows=[].concat(rows); for(let i=0;i<rows.length;i+=300) await this._post({action:'insert',table:t,rows:rows.slice(i,i+300)}); return rows },
+  async update(t,id,patch){ await this._post({action:'update',table:t,id,patch}) },
+  async updateWhere(t,col,val,patch){ await this._post({action:'updateWhere',table:t,col,val,patch}) },
+  async remove(t,id){ await this._post({action:'remove',table:t,id}) },
+  async clear(t){ await this._post({action:'clear',table:t}) },
+  async isAdmin(){ return !!sessionStorage.getItem('cgkt_pw') },
+  async login(email,pw){ const r=await fetch(CFG.GSHEET_URL,{method:'POST',body:JSON.stringify({action:'login',pw})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'Sai mật khẩu'); sessionStorage.setItem('cgkt_pw',pw); return true },
+  async logout(){ sessionStorage.removeItem('cgkt_pw') }
+};
+const DB = isDemo ? LocalDB : GSDB;
+
+/* ================= TRẠNG THÁI ================= */
+const S = {cau_hinh:[],khoa:[],don_vi:[],ky_thuat:[],lua_chon:[],dang_ky:[]};
+let ADMIN=false, TAB='tw', FILTER={cn:'',q:'',dv:'',chiDaChon:false};
+const cfg = () => S.cau_hinh[0] || {id:1,mo:true,han_chot:null,thong_bao:''};
+const isOpen = () => { const c=cfg(); return !!c.mo && (!c.han_chot || new Date() <= new Date(c.han_chot)); };
+const canEdit = () => ADMIN || isOpen();
+const byId = (t,id) => S[t].find(r=>r.id===id);
+const curKhoa = () => $('#selKhoa').value;
+
+async function loadAll(){
+  if(DB.allTables){ const d=await DB.allTables(); TABLES.forEach(t=>S[t]=d[t]||[]); }
+  else { const res = await Promise.all(TABLES.map(t=>DB.all(t))); TABLES.forEach((t,i)=>S[t]=res[i]); }
+  S.khoa.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0));
+}
+
+function buildSeed(){
+  const dv = SEED_DONVI.map(d=>({id:uid(),ten:d.ten,tuyen:d.tuyen,ghi_chu:d.ghi_chu,duyet:true,_code:d.code}));
+  const kts = new Map(), lcs=[];
+  SEED_CATALOG.forEach(c=>{
+    const k=norm(c.ten); let kt=kts.get(k);
+    if(!kt){kt={id:uid(),ten:c.ten,chuyen_nganh:c.chuyen_nganh,duyet:true};kts.set(k,kt)}
+    const d=dv.find(x=>x._code===c.don_vi);
+    lcs.push({id:uid(),ky_thuat_id:kt.id,don_vi_id:d.id,doi_tuong:c.doi_tuong,thoi_gian:c.thoi_gian,goi:c.goi,hoc_phi:c.hoc_phi,nguon_tt:c.nguon_tt,duyet:true});
+  });
+  dv.forEach(d=>delete d._code);
+  return {don_vi:dv,ky_thuat:[...kts.values()],lua_chon:lcs,
+    khoa:SEED_KHOA.map((t,i)=>({id:uid(),ten:t,thu_tu:i+1})),
+    cau_hinh:[{id:1,mo:true,han_chot:'2026-12-10T17:00:00+07:00',thong_bao:'Các khoa/phòng hoàn thành đăng ký trước 17h00 ngày 10/12/2026 để Phòng KHTH/CĐT tổng hợp gửi Sở Y tế trước 15/12/2026.'}]};
+}
+async function seedIfEmpty(force){
+  if(!force && S.ky_thuat.length) return;
+  const s=buildSeed();
+  if(force){for(const t of ['dang_ky','lua_chon','ky_thuat','don_vi','khoa']) await DB.clear(t);}
+  if(!S.cau_hinh.length) await DB.insert('cau_hinh',s.cau_hinh);
+  if(force || !S.khoa.length) await DB.insert('khoa',s.khoa);
+  await DB.insert('don_vi',s.don_vi); await DB.insert('ky_thuat',s.ky_thuat); await DB.insert('lua_chon',s.lua_chon);
+  await loadAll();
+}
+
+/* ================= HEADER / CHUNG ================= */
+function renderHead(){
+  const c=cfg(), o=isOpen();
+  const hc = c.han_chot ? new Date(c.han_chot).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+  $('#stBadge').className='badge '+(o?'b-open':'b-close');
+  $('#stBadge').textContent = o ? ('● Đang mở'+(hc?' · hạn '+hc:'')) : '● Đã khóa nhập liệu';
+  $('#modeBadge').innerHTML = isDemo ? '<span class="badge b-wait" title="Dữ liệu chỉ lưu trên trình duyệt này">Chế độ dùng thử</span>' : '<span class="badge b-open" title="Dữ liệu lưu trên Google Sheet">Google Sheet</span>';
+  $('#btnAdmin').textContent = ADMIN ? '⚙ Quản trị (đã đăng nhập)' : '🔒 Quản trị';
+  let n='';
+  if(c.thong_bao) n+=`<div class="notice info">📢 ${esc(c.thong_bao)}</div>`;
+  if(!o && !ADMIN) n+=`<div class="notice">Đã khóa nhập liệu. Các khoa chỉ xem được phiếu; liên hệ quản trị nếu cần điều chỉnh.</div>`;
+  $('#notice').innerHTML=n;
+  const sel=$('#selKhoa'), cur=sel.value||ls('cgkt_khoa')||'';
+  sel.innerHTML='<option value="">— Chọn khoa/phòng —</option>'+S.khoa.map(k=>`<option value="${k.id}">${esc(k.ten)}</option>`).join('');
+  sel.value = S.khoa.some(k=>k.id===cur)?cur:'';
+  const mine=S.dang_ky.filter(d=>d.khoa_id===sel.value);
+  $('#nPhieu').textContent = mine.length; [1,2,3,4].forEach(p=>$('#n'+p).textContent=mine.filter(d=>plOf(d)===p).length);
+}
+function render(){ renderHead(); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
+  ({tw:()=>viewNhan('TW'),tp:()=>viewNhan('TP'),cg:viewCG,lp:viewLP,phieu:viewPhieu})[TAB]();
+}
+function needKhoa(){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!canEdit()){toast('Đã khóa nhập liệu');return false} return true }
+
+/* ================= TAB 1: DANH MỤC ================= */
+function ktOffers(ktId){ return S.lua_chon.filter(l=>l.ky_thuat_id===ktId) }
+function viewNhan(TY){
+  const kid=curKhoa(); const offT=id=>ktOffers(id).filter(o=>byId('don_vi',o.don_vi_id)?.tuyen===TY);
+  const KTS=S.ky_thuat.filter(k=>offT(k.id).length); const DVS=S.don_vi.filter(d=>d.tuyen===TY);
+  if(FILTER.dv && !DVS.some(d=>d.id===FILTER.dv)) FILTER.dv='';
+  const mineKt = new Set(S.dang_ky.filter(d=>d.khoa_id===kid && d.loai==='nhan' && plOf(d)===(TY==='TW'?1:2)).map(d=>d.ky_thuat_id));
+  const cnCount={}; KTS.forEach(k=>cnCount[k.chuyen_nganh]=(cnCount[k.chuyen_nganh]||0)+1);
+  const cns=Object.keys(cnCount).sort((a,b)=>a.localeCompare(b,'vi'));
+  const q=norm(FILTER.q);
+  if(FILTER.cn && !cnCount[FILTER.cn]) FILTER.cn='';
+  let list=KTS.filter(k=>{
+    if(FILTER.cn && k.chuyen_nganh!==FILTER.cn) return false;
+    if(FILTER.chiDaChon && !mineKt.has(k.id)) return false;
+    const offs=offT(k.id);
+    if(FILTER.dv && !offs.some(o=>o.don_vi_id===FILTER.dv)) return false;
+    if(q){const hay=norm(k.ten+' '+k.chuyen_nganh+' '+offs.map(o=>o.doi_tuong).join(' ')); if(!q.split(' ').every(w=>hay.includes(w))) return false}
+    return true;
+  });
+  list.sort((a,b)=>a.chuyen_nganh.localeCompare(b.chuyen_nganh,'vi')||a.ten.localeCompare(b.ten,'vi'));
+  if(q){const hit=k=>q.split(' ').every(w=>norm(k.ten).includes(w))?0:1; list.sort((a,b)=>hit(a)-hit(b)||dice(FILTER.q,b.ten)-dice(FILTER.q,a.ten));}
+  let html=`<div class="lay"><div class="card side">
+    <div class="cn ${!FILTER.cn?'on':''}" data-cn=""><span>Tất cả chuyên ngành</span><small>${KTS.length}</small></div>
+    ${cns.map(c=>`<div class="cn ${FILTER.cn===c?'on':''}" data-cn="${esc(c)}"><span>${esc(c)}</span><small>${cnCount[c]}</small></div>`).join('')}
+  </div><div>
+  <div class="tools">
+    <input type="text" id="q" placeholder="🔍 Tìm kỹ thuật/khóa học (gõ không dấu cũng được)…" value="${esc(FILTER.q)}">
+    <select id="fdv"><option value="">Mọi đơn vị</option>${DVS.map(d=>`<option value="${d.id}" ${FILTER.dv===d.id?'selected':''}>${esc(d.ten)}</option>`).join('')}</select>
+    <label style="display:flex;align-items:center;gap:6px;margin:0"><input type="checkbox" id="fmine" ${FILTER.chiDaChon?'checked':''}> Chỉ mục khoa đã chọn</label>
+    <button class="btn pri" id="btnNew">＋ Đề xuất kỹ thuật mới</button>
+  </div>
+  <div class="notice info" style="margin-bottom:8px">${TY==='TW'?'<b>Phụ lục 1</b> – nhận chuyển giao/đào tạo từ các <b>bệnh viện Trung ương</b>':'<b>Phụ lục 2</b> – nhận chuyển giao/đào tạo từ các <b>bệnh viện tuyến thành phố</b>'}. Đơn vị: ${DVS.map(d=>esc(d.ten)).join(', ')||'chưa có'}.</div>
+  <div class="muted" style="margin-bottom:6px">${list.length} kỹ thuật · Các mục cùng tên đã được gộp, chọn đơn vị đào tạo/chuyển giao ở từng dòng.</div>`;
+  if(!list.length) html+=`<div class="card empty">Không tìm thấy. Bấm <b>＋ Đề xuất kỹ thuật mới</b> để thêm kỹ thuật chưa có trong danh mục.</div>`;
+  let g='';
+  list.forEach(k=>{
+    if(!q && k.chuyen_nganh!==g){g=k.chuyen_nganh;html+=`<div class="grp">${esc(g)}</div>`}
+    const offs=offT(k.id); const myD=S.dang_ky.filter(d=>d.ky_thuat_id===k.id&&d.loai==='nhan'&&plOf(d)===(TY==='TW'?1:2)); const myN=myD.filter(d=>d.khoa_id===kid).length;
+    const totN=new Set(myD.map(d=>d.khoa_id)).size;
+    html+=`<div class="kt ${myN?'mine':''}"><div class="kth"><b>${esc(k.ten)}${q?` <span class="muted" style="font-weight:400">· ${esc(k.chuyen_nganh)}</span>`:''}</b>
+      ${!k.duyet?'<span class="badge b-wait">Đề xuất – chờ duyệt</span>':''}
+      ${myN?`<span class="badge b-open">✓ Khoa đã chọn (${myN})</span>`:''}
+      ${totN?`<span class="badge b-blue" title="Số khoa/phòng đã đăng ký">${totN} khoa</span>`:''}</div>
+      <table class="offs">${offs.map(o=>{const d=byId('don_vi',o.don_vi_id)||{};return `<tr>
+        <td class="u">${esc(d.ten||'?')} ${!o.duyet?' <span class="badge b-wait">mới</span>':''}</td>
+        <td>${esc(o.doi_tuong||'')}</td><td class="f">${esc(o.thoi_gian||'')}${o.goi?' · '+esc(o.goi):''}</td>
+        <td class="f">${esc(o.hoc_phi||'')}</td>
+        <td class="a"><button class="btn sm pri" data-pick="${o.id}">Chọn</button></td></tr>`}).join('')}
+        <tr><td colspan="5" style="border-top:0;padding-top:4px"><button class="btn sm" data-otherdv="${k.id}">＋ Chọn đơn vị khác</button></td></tr>
+      </table></div>`;
+  });
+  html+='</div></div>';
+  $('#view').innerHTML=html;
+  const re=()=>viewNhan(TY);
+  document.querySelectorAll('.cn').forEach(e=>e.onclick=()=>{FILTER.cn=e.dataset.cn;re()});
+  const qi=$('#q'); qi.oninput=()=>{FILTER.q=qi.value;clearTimeout(qi._t);qi._t=setTimeout(()=>{re();const n=$('#q');n.focus();n.setSelectionRange(n.value.length,n.value.length)},250)};
+  $('#fdv').onchange=e=>{FILTER.dv=e.target.value;re()};
+  $('#fmine').onchange=e=>{FILTER.chiDaChon=e.target.checked;re()};
+  $('#btnNew').onclick=()=>needKhoa()&&dlgNhan({mode:'new',TY});
+  document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{if(!needKhoa())return;const o=byId('lua_chon',b.dataset.pick);dlgNhan({mode:'pick',kt:byId('ky_thuat',o.ky_thuat_id),lc:o,TY})});
+  document.querySelectorAll('[data-otherdv]').forEach(b=>b.onclick=()=>needKhoa()&&dlgNhan({mode:'otherdv',kt:byId('ky_thuat',b.dataset.otherdv),TY}));
+}
+
+/* ---- Hộp thoại đăng ký nhận CGKT/đào tạo ---- */
+let INADMIN=false, DLG_IS_ADMIN=false;
+function openDlg(html,wide){DLG_IS_ADMIN=false;$('#dlg').className='dlg'+(wide?' wide':'');$('#dlg').innerHTML=html;$('#ovl').classList.add('on')}
+function closeDlg(force){ if(INADMIN && !DLG_IS_ADMIN && !force){adminView();return} INADMIN=false;DLG_IS_ADMIN=false;$('#ovl').classList.remove('on') }
+$('#ovl').addEventListener('mousedown',e=>{if(e.target.id==='ovl')closeDlg()});
+const optTG = v => THOI_GIAN.map(t=>`<option ${t===v?'selected':''}>${t}</option>`).join('');
+const optHT = v => HINH_THUC.map(t=>`<option ${t===v?'selected':''}>${t}</option>`).join('');
+const dvDatalist = (TY) => `<datalist id="dlDV">${S.don_vi.filter(d=>!TY||d.tuyen===TY).map(d=>`<option value="${esc(d.ten)}">`).join('')}</datalist>`;
+const cnDatalist = () => `<datalist id="dlCN">${[...new Set(S.ky_thuat.map(k=>k.chuyen_nganh))].sort().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
+
+function dlgNhan({mode,kt,lc,edit,TY}){
+  if(!TY) TY = edit ? (plOf(edit)===1?'TW':'TP') : 'TW';
+  const PLN = TY==='TW'?'PL1 – Nhận từ Trung ương':'PL2 – Nhận từ tuyến TP';
+  // edit: bản ghi dang_ky đang sửa
+  const d = edit || {};
+  const title = edit ? 'Sửa đăng ký' : mode==='new' ? 'Đề xuất kỹ thuật mới' : 'Đăng ký nhận chuyển giao / đào tạo';
+  let top='';
+  if(mode==='new'){
+    top=`<div class="fld"><label>Tên kỹ thuật / khóa học *</label><input type="text" id="fTen" placeholder="VD: Nội soi phế quản siêu âm (EBUS)"></div>
+    <div id="fSugg"></div>
+    <div class="fld"><label>Chuyên ngành *</label><input type="text" id="fCN" list="dlCN" placeholder="Chọn hoặc gõ chuyên ngành mới">${cnDatalist()}</div>`;
+  } else {
+    top=`<div class="notice info" style="margin-bottom:12px"><b>${esc(kt.ten)}</b><br><span class="muted">${esc(kt.chuyen_nganh)}</span></div>`;
+  }
+  const offs = kt ? ktOffers(kt.id).filter(o=>byId('don_vi',o.don_vi_id)?.tuyen===TY) : [];
+  let dvPart;
+  if(mode==='pick' || (edit && d.lua_chon_id)){
+    dvPart=`<div class="fld"><label>Đơn vị chuyển giao / đào tạo</label><select id="fLC">${offs.map(o=>{const v=byId('don_vi',o.don_vi_id)||{};return `<option value="${o.id}" ${(lc&&lc.id===o.id)||d.lua_chon_id===o.id?'selected':''}>${esc(v.ten)} — ${esc(o.doi_tuong||'')} · ${esc(o.thoi_gian||'')} · ${esc(o.goi||'')} · ${esc(o.hoc_phi||'')}</option>`}).join('')}</select></div>`;
+  } else {
+    const dv=d.don_vi_id?byId('don_vi',d.don_vi_id):null;
+    dvPart=`<div class="row"><div class="fld"><label>Đơn vị chuyển giao / đào tạo *</label><input type="text" id="fDV" list="dlDV" value="${esc(dv?dv.ten:'')}" placeholder="Chọn hoặc gõ tên đơn vị mới">${dvDatalist(TY)}</div>
+      <div class="fld"><label>Tuyến</label><input type="text" value="${TY==='TW'?'Trung ương':'Tuyến thành phố'}" disabled></div></div>`;
+  }
+  const defDT = d.doi_tuong ?? (lc?lc.doi_tuong:'');
+  openDlg(`<h3>${title}</h3><div class="sub">${PLN} · ${esc(byId('khoa',d.khoa_id||curKhoa())?.ten||'')}</div>
+    ${top}${dvPart}
+    <div class="row3"><div class="fld"><label>Hình thức</label><select id="fHT">${optHT(d.hinh_thuc||(mode==='pick'?HINH_THUC[1]:HINH_THUC[0]))}</select></div>
+      <div class="fld"><label>Số người dự kiến</label><input type="number" min="0" id="fSL" value="${d.so_nguoi??1}"></div>
+      <div class="fld"><label>Dự kiến thời gian</label><select id="fTG">${optTG(d.thoi_gian||'Quý I/2027')}</select></div></div>
+    <div class="fld"><label>Đối tượng cử đi / nhận chuyển giao</label><input type="text" id="fDT" value="${esc(defDT)}" placeholder="VD: 01 Bác sĩ, 01 Điều dưỡng"></div>
+    <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến sẽ cử đi, lý do, điều kiện trang thiết bị…">${esc(d.ghi_chu||'')}</textarea></div>
+    <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">${edit?'Lưu':'Thêm vào phiếu'}</button></div>`);
+  // gợi ý trùng tên
+  if(mode==='new'){
+    const ten=$('#fTen'); ten.focus();
+    ten.oninput=()=>{const v=ten.value.trim(); if(v.length<4){$('#fSugg').innerHTML='';return}
+      const sc=S.ky_thuat.map(k=>({k,s:Math.max(dice(v,k.ten), norm(k.ten).includes(norm(v))?0.9:0)})).filter(x=>x.s>=0.5).sort((a,b)=>b.s-a.s).slice(0,6);
+      $('#fSugg').innerHTML=sc.length?`<div class="sugg"><div>⚠ Có thể đã có trong danh mục – bấm để chọn thay vì tạo mới:</div>${sc.map(x=>`<div data-k="${x.k.id}">${esc(x.k.ten)} <span class="muted">· ${esc(x.k.chuyen_nganh)}</span></div>`).join('')}</div>`:'';
+      document.querySelectorAll('#fSugg [data-k]').forEach(e=>e.onclick=()=>{const k=byId('ky_thuat',e.dataset.k);const o=ktOffers(k.id).filter(x=>byId('don_vi',x.don_vi_id)?.tuyen===TY);o.length?dlgNhan({mode:'pick',kt:k,lc:o[0],TY}):dlgNhan({mode:'otherdv',kt:k,TY})});
+    };
+  }
+  $('#fOK').onclick=async()=>{
+    try{
+      const base={hinh_thuc:$('#fHT').value,so_nguoi:+$('#fSL').value||0,thoi_gian:$('#fTG').value,doi_tuong:$('#fDT').value.trim(),ghi_chu:$('#fGC').value.trim(),
+        nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
+      let ktId=kt?.id, lcId=null, dvId=null;
+      if(mode==='new'){
+        const ten=$('#fTen').value.trim(), cn=$('#fCN').value.trim();
+        if(!ten||!cn) return toast('Nhập tên kỹ thuật và chuyên ngành');
+        const ex=S.ky_thuat.find(k=>norm(k.ten)===norm(ten));
+        if(ex) ktId=ex.id; else {ktId=uid(); await DB.insert('ky_thuat',{id:ktId,ten,chuyen_nganh:cn,duyet:ADMIN,de_xuat_khoa:curKhoa(),created_at:nowIso()})}
+      }
+      if($('#fLC')){ lcId=$('#fLC').value; dvId=byId('lua_chon',lcId).don_vi_id; }
+      else {
+        const dvTen=$('#fDV').value.trim(); if(!dvTen) return toast('Nhập đơn vị chuyển giao/đào tạo');
+        let dv=S.don_vi.find(x=>norm(x.ten)===norm(dvTen));
+        if(dv && dv.tuyen!==TY) return toast(`${dv.ten} thuộc ${dv.tuyen==='TW'?'tuyến Trung ương – đăng ký ở tab PL1':'tuyến thành phố – đăng ký ở tab PL2'}`,4000);
+        if(!dv){dv={id:uid(),ten:dvTen,tuyen:TY,duyet:ADMIN,ghi_chu:'Khoa đề xuất'};await DB.insert('don_vi',dv)}
+        dvId=dv.id;
+        let o=S.lua_chon.find(l=>l.ky_thuat_id===ktId&&l.don_vi_id===dvId);
+        if(!o){o={id:uid(),ky_thuat_id:ktId,don_vi_id:dvId,doi_tuong:base.doi_tuong,thoi_gian:'',goi:'',hoc_phi:'',duyet:ADMIN};await DB.insert('lua_chon',o)}
+        lcId=o.id;
+      }
+      const row={...base,loai:'nhan',ky_thuat_id:ktId,lua_chon_id:lcId,don_vi_id:dvId};
+      if(edit) await DB.update('dang_ky',edit.id,row);
+      else await DB.insert('dang_ky',{id:uid(),khoa_id:curKhoa(),created_at:nowIso(),...row});
+      await loadAll(); render(); closeDlg(); toast(edit?'Đã lưu':'Đã thêm vào phiếu của khoa');
+    }catch(e){console.error(e);toast('Lỗi: '+(e.message||e),4000)}
+  };
+}
+
+/* ================= TAB 2: PL3 ================= */
+function viewCG(){
+  const kid=curKhoa(), rows=S.dang_ky.filter(d=>d.khoa_id===kid&&d.loai==='cg');
+  $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 3 – Nhu cầu chuyển giao kỹ thuật cho tuyến dưới</b><div class="muted">Kỹ thuật khoa có thể chuyển giao cho các TTYT/bệnh viện tuyến dưới. Đơn vị chuyển giao: ${esc(CFG.TEN_BV)}.</div></div>
+    <button class="btn pri" id="add">＋ Thêm kỹ thuật chuyển giao</button></div>
+    ${tblRows(rows,'cg')}</div>`;
+  $('#add').onclick=()=>needKhoa()&&dlgCG();
+  bindRowBtns();
+}
+function dlgCG(edit){
+  const d=edit||{};
+  const allNames=[...new Set(S.ky_thuat.map(k=>k.ten))];
+  openDlg(`<h3>${edit?'Sửa':'Thêm'} kỹ thuật chuyển giao cho tuyến dưới (PL3)</h3><div class="sub">${esc(byId('khoa',d.khoa_id||curKhoa())?.ten||'')}</div>
+    <div class="fld"><label>Tên kỹ thuật chuyển giao *</label><input type="text" id="fTen" list="dlKT" value="${esc(d.ten_kt||'')}"><datalist id="dlKT">${allNames.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
+    <div class="fld"><label>Đơn vị nhận chuyển giao *</label><input type="text" id="fNhan" value="${esc(d.don_vi_nhan||'')}" placeholder="VD: TTYT huyện…, BV…; nhiều đơn vị cách nhau dấu ;"></div>
+    <div class="row"><div class="fld"><label>Dự kiến thời gian</label><select id="fTG">${optTG(d.thoi_gian||'Quý I/2027')}</select></div>
+    <div class="fld"><label>Hình thức</label><select id="fHT">${optHT(d.hinh_thuc||HINH_THUC[0])}</select></div></div>
+    <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến tham gia, ...">${esc(d.ghi_chu||'')}</textarea></div>
+    <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">Lưu</button></div>`);
+  $('#fOK').onclick=async()=>{
+    const ten=$('#fTen').value.trim(),nhan=$('#fNhan').value.trim(); if(!ten||!nhan) return toast('Nhập tên kỹ thuật và đơn vị nhận');
+    const row={loai:'cg',ten_kt:ten,don_vi_nhan:nhan,thoi_gian:$('#fTG').value,hinh_thuc:$('#fHT').value,ghi_chu:$('#fGC').value.trim(),nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
+    try{ if(edit) await DB.update('dang_ky',edit.id,row); else await DB.insert('dang_ky',{id:uid(),khoa_id:curKhoa(),created_at:nowIso(),...row});
+      await loadAll();render();closeDlg();toast('Đã lưu');}catch(e){toast('Lỗi: '+e.message,4000)}
+  };
+}
+
+/* ================= TAB 3: PL4 ================= */
+function viewLP(){
+  const kid=curKhoa(), rows=S.dang_ky.filter(d=>d.khoa_id===kid&&d.loai==='lp');
+  $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 4 – Hỗ trợ cán bộ luân phiên năm 2027</b><div class="muted">Nhận cán bộ tuyến trên về hỗ trợ, hoặc cử cán bộ của khoa đi hỗ trợ tuyến dưới.</div></div>
+    <button class="btn pri" id="add">＋ Thêm nhu cầu luân phiên</button></div>
+    ${tblRows(rows,'lp')}</div>`;
+  $('#add').onclick=()=>needKhoa()&&dlgLP();
+  bindRowBtns();
+}
+function dlgLP(edit){
+  const d=edit||{huong:'nhan'};
+  openDlg(`<h3>${edit?'Sửa':'Thêm'} nhu cầu cán bộ luân phiên (PL4)</h3><div class="sub">${esc(byId('khoa',d.khoa_id||curKhoa())?.ten||'')}</div>
+    <div class="fld"><label>Hướng hỗ trợ</label><select id="fHuong"><option value="nhan" ${d.huong==='nhan'?'selected':''}>Nhận cán bộ từ đơn vị khác về hỗ trợ khoa</option><option value="cu" ${d.huong==='cu'?'selected':''}>Cử cán bộ của khoa đi hỗ trợ đơn vị khác</option></select></div>
+    <div class="fld"><label id="lbDV">Đơn vị</label><input type="text" id="fDV" list="dlDV" value="${esc(d.don_vi_khac||'')}">${dvDatalist()}</div>
+    <div class="row"><div class="fld"><label>Chuyên khoa *</label><input type="text" id="fCK" value="${esc(d.chuyen_khoa||'')}" placeholder="VD: Hồi sức tích cực, Nội soi phế quản"></div>
+    <div class="fld"><label>Số cán bộ</label><input type="number" min="0" id="fSL" value="${d.so_nguoi??1}"></div></div>
+    <div class="row"><div class="fld"><label>Thời gian</label><select id="fTG">${optTG(d.thoi_gian||'Quý I/2027')}</select></div>
+    <div class="fld"><label>Đối tượng</label><input type="text" id="fDT" value="${esc(d.doi_tuong||'')}" placeholder="VD: Bác sĩ CKI"></div></div>
+    <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến tham gia, ...">${esc(d.ghi_chu||'')}</textarea></div>
+    <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">Lưu</button></div>`);
+  const upd=()=>$('#lbDV').textContent=$('#fHuong').value==='nhan'?'Đơn vị hỗ trợ (cử cán bộ về) *':'Đơn vị nhận hỗ trợ *'; upd(); $('#fHuong').onchange=upd;
+  $('#fOK').onclick=async()=>{
+    const dv=$('#fDV').value.trim(),ck=$('#fCK').value.trim(); if(!dv||!ck) return toast('Nhập đơn vị và chuyên khoa');
+    const row={loai:'lp',huong:$('#fHuong').value,don_vi_khac:dv,chuyen_khoa:ck,so_nguoi:+$('#fSL').value||0,thoi_gian:$('#fTG').value,doi_tuong:$('#fDT').value.trim(),ghi_chu:$('#fGC').value.trim(),nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
+    try{ if(edit) await DB.update('dang_ky',edit.id,row); else await DB.insert('dang_ky',{id:uid(),khoa_id:curKhoa(),created_at:nowIso(),...row});
+      await loadAll();render();closeDlg();toast('Đã lưu');}catch(e){toast('Lỗi: '+e.message,4000)}
+  };
+}
+
+/* ================= PHIẾU ================= */
+function plOf(d){ if(d.loai==='cg')return 3; if(d.loai==='lp')return 4; const v=byId('don_vi',d.don_vi_id); return v&&v.tuyen==='TW'?1:2 }
+function rowDesc(d){
+  if(d.loai==='nhan'){const k=byId('ky_thuat',d.ky_thuat_id)||{},v=byId('don_vi',d.don_vi_id)||{},o=byId('lua_chon',d.lua_chon_id)||{};
+    return {ten:k.ten||'(đã xóa)',cn:k.chuyen_nganh||'',dv:v.ten||'',chiTiet:[o.thoi_gian,o.goi,o.hoc_phi].filter(Boolean).join(' · '),cho:(!k.duyet||!v.duyet)}}
+  if(d.loai==='cg') return {ten:d.ten_kt,dv:CFG.TEN_BV+' → '+d.don_vi_nhan,chiTiet:''};
+  return {ten:'Chuyên khoa: '+d.chuyen_khoa,dv:(d.huong==='nhan'?d.don_vi_khac+' → '+CFG.TEN_BV:CFG.TEN_BV+' → '+d.don_vi_khac),chiTiet:''};
+}
+function tblRows(rows,loai,showKhoa){
+  if(!rows.length) return `<div class="empty">Chưa có mục nào.</div>`;
+  const plName={1:'PL1',2:'PL2',3:'PL3',4:'PL4'};
+  return `<div style="overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Khoa/phòng đề xuất</th><th>PL</th><th>Kỹ thuật / nội dung</th><th>Đơn vị</th><th>Hình thức</th><th>SL</th><th>Đối tượng</th><th>Thời gian</th><th>Ghi chú</th><th class="noprint"></th></tr></thead><tbody>
+  ${rows.map((d,i)=>{const r=rowDesc(d);return `<tr><td>${i+1}</td><td><b>${esc(byId('khoa',d.khoa_id)?.ten||'?')}</b>${d.nguoi_khai||d.sdt?`<div class="muted">${esc([d.nguoi_khai,d.sdt].filter(Boolean).join(' – '))}</div>`:''}</td><td><span class="badge b-blue">${plName[plOf(d)]}</span></td>
+    <td><b>${esc(r.ten)}</b>${r.cho?' <span class="badge b-wait">chờ duyệt</span>':''}${r.chiTiet?`<div class="muted">${esc(r.chiTiet)}</div>`:''}</td><td>${esc(r.dv)}</td>
+    <td>${esc(d.hinh_thuc||'')}</td><td>${d.so_nguoi??''}</td><td>${esc(d.doi_tuong||'')}</td><td>${esc(d.thoi_gian||'')}</td><td>${esc(d.ghi_chu||'')}</td>
+    <td class="noprint" style="white-space:nowrap">${canEdit()&&(ADMIN||d.khoa_id===curKhoa())?`<button class="btn sm" data-ed="${d.id}">Sửa</button> <button class="btn sm dan" data-del="${d.id}">Xóa</button>`:''}</td></tr>`}).join('')}
+  </tbody></table></div>`;
+}
+function bindRowBtns(root=document){
+  const own=d=>ADMIN||(d&&d.khoa_id===curKhoa());
+  root.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{const d=byId('dang_ky',b.dataset.ed); if(!own(d))return toast('Chỉ khoa/phòng đã đề xuất mới được sửa');
+    if(d.loai==='nhan'){const kt=byId('ky_thuat',d.ky_thuat_id);dlgNhan({mode:'pick',kt,lc:byId('lua_chon',d.lua_chon_id),edit:d})}
+    else if(d.loai==='cg') dlgCG(d); else dlgLP(d);});
+  root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>!own(byId('dang_ky',b.dataset.del))?toast('Chỉ khoa/phòng đã đề xuất mới được xóa'):confirmDlg('Xóa mục này khỏi phiếu?',async()=>{await DB.remove('dang_ky',b.dataset.del);await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}));
+}
+function confirmDlg(msg,fn){ openDlg(`<h3>Xác nhận</h3><p>${esc(msg)}</p><div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="cOK">Đồng ý</button></div>`);
+  $('#cOK').onclick=async()=>{closeDlg();try{await fn()}catch(e){toast('Lỗi: '+e.message,4000)}} }
+function viewPhieu(){
+  const kid=curKhoa();
+  if(!kid){$('#view').innerHTML='<div class="card empty">Chọn Khoa/Phòng để xem phiếu.</div>';return}
+  const rows=S.dang_ky.filter(d=>d.khoa_id===kid).sort((a,b)=>plOf(a)-plOf(b));
+  const last=rows.map(r=>r.updated_at||r.created_at).sort().pop();
+  $('#view').innerHTML=`<div class="card"><div style="text-align:center;margin-bottom:12px"><b style="font-size:16px;color:var(--navy)">PHIẾU ĐĂNG KÝ NHU CẦU CGKT & HỖ TRỢ CHUYÊN MÔN NĂM 2027</b><div>${esc(byId('khoa',kid).ten)} – ${esc(CFG.TEN_BV)}</div>
+    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div></div>${tblRows(rows,'all')}</div>`;
+  bindRowBtns();
+}
+
+/* ================= QUẢN TRỊ ================= */
+let ATAB='tong';
+async function openAdmin(){
+  if(!ADMIN){
+    openDlg(`<h3>Đăng nhập quản trị</h3><div class="sub">${isDemo?'Chế độ dùng thử – mật khẩu mặc định: <b>'+esc(CFG.DEMO_ADMIN_PASSWORD)+'</b>':'Mật khẩu quản trị (ADMIN_PW trong Apps Script)'}</div>
+      <div class="fld"><label>Mật khẩu</label><input type="password" id="aPw"></div>
+      <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="aOK">Đăng nhập</button></div>`);
+    $('#aPw').focus(); $('#aPw').onkeydown=e=>{if(e.key==='Enter')$('#aOK').click()};
+    $('#aOK').onclick=async()=>{try{await DB.login($('#aEm')?.value,$('#aPw').value);ADMIN=true;if(!S.ky_thuat.length){await loadAll();if(!S.ky_thuat.length)await seedIfEmpty(false)}render();adminView()}catch(e){toast(e.message||'Đăng nhập thất bại')}};
+    return;
+  }
+  adminView();
+}
+function adminView(){
+  const pend=S.ky_thuat.filter(k=>!k.duyet).length+S.don_vi.filter(d=>!d.duyet).length;
+  const T={tong:'Tổng hợp & xuất Excel',duyet:`Duyệt đề xuất${pend?` (${pend})`:''}`,dm:'Danh mục kỹ thuật',dv:'Đơn vị',khoa:'Khoa/Phòng',ch:'Cấu hình'};
+  openDlg(`<div style="display:flex;align-items:center;gap:10px"><h3 style="flex:1">Quản trị</h3><button class="btn sm" id="aRef">⟳ Tải lại</button><button class="btn sm" id="aOut">Đăng xuất</button><button class="btn sm" onclick="closeDlg(true)">✕ Đóng</button></div>
+    <div class="atabs" id="atabs">${Object.entries(T).map(([k,v])=>`<div class="atab ${ATAB===k?'on':''}" data-a="${k}">${v}</div>`).join('')}</div><div id="aBody"></div>`,true);
+  INADMIN=true; DLG_IS_ADMIN=true;
+  document.querySelectorAll('.atab').forEach(e=>e.onclick=()=>{ATAB=e.dataset.a;adminView()});
+  $('#aOut').onclick=async()=>{await DB.logout();ADMIN=false;closeDlg(true);render()};
+  $('#aRef').onclick=async()=>{await loadAll();render();adminView()};
+  ({tong:aTong,duyet:aDuyet,dm:aDM,dv:aDV,khoa:aKhoa,ch:aCH})[ATAB]();
+}
+function groupNhan(pl){
+  const m=new Map();
+  S.dang_ky.filter(d=>d.loai==='nhan'&&plOf(d)===pl).forEach(d=>{
+    const key=d.ky_thuat_id+'|'+d.don_vi_id; if(!m.has(key)) m.set(key,{k:byId('ky_thuat',d.ky_thuat_id)||{ten:'?',chuyen_nganh:''},v:byId('don_vi',d.don_vi_id)||{ten:'?'},items:[]});
+    m.get(key).items.push(d);
+  });
+  return [...m.values()].sort((a,b)=>(a.k.chuyen_nganh||'').localeCompare(b.k.chuyen_nganh||'','vi')||a.k.ten.localeCompare(b.k.ten,'vi'));
+}
+const uniq = a => [...new Set(a.filter(Boolean))];
+const khoaTen = id => (byId('khoa',id)?.ten||'?');
+function aTong(){
+  const done=new Set(S.dang_ky.map(d=>d.khoa_id));
+  const c=[1,2,3,4].map(p=>p<=2?groupNhan(p).length:S.dang_ky.filter(d=>plOf(d)===p).length);
+  const pend=S.ky_thuat.filter(k=>!k.duyet).length+S.don_vi.filter(d=>!d.duyet).length;
+  const g1=groupNhan(1),g2=groupNhan(2);
+  const gt=(g)=>g.length?`<div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Kỹ thuật</th><th>Đơn vị chuyển giao</th><th>Khoa đăng ký</th><th>SL</th><th>Thời gian</th></tr></thead><tbody>${g.map((x,i)=>`<tr><td>${i+1}</td><td><b>${esc(x.k.ten)}</b><div class="muted">${esc(x.k.chuyen_nganh)}</div></td><td>${esc(x.v.ten)}</td><td>${x.items.map(d=>`<span class="chip">${esc(khoaTen(d.khoa_id))}</span>`).join('')}</td><td>${x.items.reduce((s,d)=>s+(+d.so_nguoi||0),0)}</td><td>${esc(uniq(x.items.map(d=>d.thoi_gian)).join('; '))}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Chưa có</div>';
+  $('#aBody').innerHTML=`<div class="kpis">
+    <div class="kpi"><b>${done.size}/${S.khoa.length}</b><span>Khoa/phòng đã khai</span></div>
+    <div class="kpi" style="background:var(--ice)"><b>${c[0]}</b><span>PL1 – nhận từ TƯ (dòng)</span></div>
+    <div class="kpi" style="background:var(--mint)"><b>${c[1]}</b><span>PL2 – nhận từ tuyến TP</span></div>
+    <div class="kpi" style="background:var(--lav)"><b>${c[2]}</b><span>PL3 – CG tuyến dưới</span></div>
+    <div class="kpi" style="background:var(--peach)"><b>${c[3]}</b><span>PL4 – luân phiên</span></div>
+    <div class="kpi" style="background:var(--pink)"><b>${pend}</b><span>Đề xuất chờ duyệt</span></div></div>
+    <div class="tools"><button class="btn gr" id="xSo">⬇ Xuất mẫu gửi Sở (4 phụ lục)</button><button class="btn pri" id="xCT">⬇ Xuất file tổng hợp toàn bộ</button><button class="btn" id="xBK">⬇ Sao lưu dữ liệu (JSON)</button>
+      ${pend?'<span class="badge b-wait" style="align-self:center">Còn đề xuất chưa duyệt – vẫn được đưa vào file xuất</span>':''}</div>
+    <div class="row"><div><b>Tình trạng các khoa</b><div class="scroll" style="max-height:300px;margin-top:6px"><table class="tbl"><thead><tr><th>Khoa/Phòng</th><th>Số mục</th><th>Người khai</th><th>Cập nhật</th></tr></thead><tbody>
+      ${S.khoa.map(k=>{const r=S.dang_ky.filter(d=>d.khoa_id===k.id);const l=r.map(x=>x.updated_at||x.created_at).sort().pop();return `<tr><td>${esc(k.ten)}</td><td>${r.length?`<span class="badge b-open">${r.length}</span>`:'<span class="badge b-close">chưa</span>'}</td><td>${esc(uniq(r.map(x=>x.nguoi_khai)).join(', '))}</td><td>${l?new Date(l).toLocaleString('vi-VN'):''}</td></tr>`}).join('')}
+      </tbody></table></div></div>
+      <div><b>PL1 – Nhận từ BV Trung ương (đã gộp)</b><div style="margin-top:6px">${gt(g1)}</div></div></div>
+    <div style="margin-top:14px"><b>PL2 – Nhận từ BV tuyến thành phố (đã gộp)</b><div style="margin-top:6px">${gt(g2)}</div></div>
+    <div style="margin-top:14px"><b>Tất cả bản ghi</b> <span class="muted">(quản trị sửa/xóa được kể cả khi đã khóa)</span><div class="scroll" style="margin-top:6px">${tblRows([...S.dang_ky].sort((a,b)=>plOf(a)-plOf(b)||khoaTen(a.khoa_id).localeCompare(khoaTen(b.khoa_id),'vi')),'all',true)}</div></div>`;
+  $('#xSo').onclick=()=>exportWB(false); $('#xCT').onclick=()=>exportWB(true); $('#xBK').onclick=backup;
+  bindRowBtns($('#aBody'));
+}
+function aDuyet(){
+  const kts=S.ky_thuat.filter(k=>!k.duyet), dvs=S.don_vi.filter(d=>!d.duyet);
+  const lcs=S.lua_chon.filter(l=>!l.duyet && byId('ky_thuat',l.ky_thuat_id)?.duyet && byId('don_vi',l.don_vi_id)?.duyet);
+  const optKT=(ex)=>`<option value="">— Gộp vào kỹ thuật có sẵn… —</option>`+S.ky_thuat.filter(k=>k.duyet&&k.id!==ex).sort((a,b)=>a.ten.localeCompare(b.ten,'vi')).map(k=>`<option value="${k.id}">${esc(k.ten)}</option>`).join('');
+  const optDV=(ex)=>`<option value="">— Gộp vào đơn vị có sẵn… —</option>`+S.don_vi.filter(d=>d.duyet&&d.id!==ex).map(d=>`<option value="${d.id}">${esc(d.ten)}</option>`).join('');
+  $('#aBody').innerHTML=`<div class="notice info">Duyệt: đưa vào danh mục chính thức. Gộp: chuyển toàn bộ đăng ký sang mục có sẵn rồi xóa mục đề xuất (dùng khi khoa gõ trùng/khác cách viết).</div>
+  <b>Kỹ thuật đề xuất (${kts.length})</b><div class="scroll" style="margin:6px 0 16px"><table class="tbl"><thead><tr><th>Tên (sửa trực tiếp)</th><th>Chuyên ngành</th><th>Khoa đề xuất</th><th>Gần giống</th><th>Thao tác</th></tr></thead><tbody>
+  ${kts.map(k=>{const sim=S.ky_thuat.filter(x=>x.duyet).map(x=>({x,s:dice(k.ten,x.ten)})).sort((a,b)=>b.s-a.s).slice(0,2).filter(a=>a.s>.45);
+   return `<tr><td><input type="text" data-kten="${k.id}" value="${esc(k.ten)}"></td><td><input type="text" data-kcn="${k.id}" value="${esc(k.chuyen_nganh)}" list="dlCN"></td><td>${esc(khoaTen(k.de_xuat_khoa))}</td>
+   <td>${sim.map(a=>`<div class="muted">${esc(a.x.ten)} (${Math.round(a.s*100)}%)</div>`).join('')}</td>
+   <td style="white-space:nowrap"><button class="btn sm gr" data-kok="${k.id}">Duyệt</button> <select data-kmg="${k.id}" style="width:200px;display:inline-block">${optKT(k.id)}</select> <button class="btn sm dan" data-kdel="${k.id}">Xóa</button></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">Không có</td></tr>'}
+  </tbody></table></div>${cnDatalist()}
+  <b>Đơn vị đề xuất (${dvs.length})</b><div class="scroll" style="margin:6px 0 16px"><table class="tbl"><thead><tr><th>Tên</th><th>Tuyến</th><th>Thao tác</th></tr></thead><tbody>
+  ${dvs.map(d=>`<tr><td><input type="text" data-dten="${d.id}" value="${esc(d.ten)}"></td><td><select data-dtuyen="${d.id}"><option value="TW" ${d.tuyen==='TW'?'selected':''}>Trung ương</option><option value="TP" ${d.tuyen==='TP'?'selected':''}>Tuyến TP</option></select></td>
+   <td style="white-space:nowrap"><button class="btn sm gr" data-dok="${d.id}">Duyệt</button> <select data-dmg="${d.id}" style="width:220px;display:inline-block">${optDV(d.id)}</select></td></tr>`).join('')||'<tr><td colspan="3" class="empty">Không có</td></tr>'}
+  </tbody></table></div>
+  <b>Đơn vị mới cho kỹ thuật có sẵn (${lcs.length})</b><div class="scroll" style="margin-top:6px"><table class="tbl"><thead><tr><th>Kỹ thuật</th><th>Đơn vị</th><th>Đối tượng</th><th>Thời gian</th><th>Gói</th><th>Học phí</th><th></th></tr></thead><tbody>
+  ${lcs.map(l=>`<tr><td>${esc(byId('ky_thuat',l.ky_thuat_id).ten)}</td><td>${esc(byId('don_vi',l.don_vi_id).ten)}</td>
+   <td><input type="text" data-l="${l.id}" data-f="doi_tuong" value="${esc(l.doi_tuong||'')}"></td><td><input type="text" data-l="${l.id}" data-f="thoi_gian" value="${esc(l.thoi_gian||'')}"></td>
+   <td><input type="text" data-l="${l.id}" data-f="goi" value="${esc(l.goi||'')}"></td><td><input type="text" data-l="${l.id}" data-f="hoc_phi" value="${esc(l.hoc_phi||'')}"></td>
+   <td><button class="btn sm gr" data-lok="${l.id}">Duyệt</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Không có</td></tr>'}
+  </tbody></table></div>`;
+  const done=async m=>{await loadAll();render();adminView();toast(m)};
+  document.querySelectorAll('[data-kok]').forEach(b=>b.onclick=async()=>{const id=b.dataset.kok;await DB.update('ky_thuat',id,{ten:$(`[data-kten="${id}"]`).value.trim(),chuyen_nganh:$(`[data-kcn="${id}"]`).value.trim(),duyet:true});await DB.updateWhere('lua_chon','ky_thuat_id',id,{duyet:true});done('Đã duyệt')});
+  document.querySelectorAll('[data-kmg]').forEach(s=>s.onchange=()=>{const a=s.dataset.kmg,t=s.value;if(!t)return;confirmDlg(`Gộp "${byId('ky_thuat',a).ten}" vào "${byId('ky_thuat',t).ten}"?`,async()=>{await mergeKT(a,t);done('Đã gộp')})});
+  document.querySelectorAll('[data-kdel]').forEach(b=>b.onclick=()=>{const id=b.dataset.kdel,n=S.dang_ky.filter(d=>d.ky_thuat_id===id).length;confirmDlg(`Xóa kỹ thuật đề xuất này${n?` và ${n} đăng ký liên quan`:''}?`,async()=>{for(const d of S.dang_ky.filter(d=>d.ky_thuat_id===id))await DB.remove('dang_ky',d.id);for(const l of ktOffers(id))await DB.remove('lua_chon',l.id);await DB.remove('ky_thuat',id);done('Đã xóa')})});
+  document.querySelectorAll('[data-dok]').forEach(b=>b.onclick=async()=>{const id=b.dataset.dok;await DB.update('don_vi',id,{ten:$(`[data-dten="${id}"]`).value.trim(),tuyen:$(`[data-dtuyen="${id}"]`).value,duyet:true});done('Đã duyệt')});
+  document.querySelectorAll('[data-dmg]').forEach(s=>s.onchange=()=>{const a=s.dataset.dmg,t=s.value;if(!t)return;confirmDlg(`Gộp đơn vị "${byId('don_vi',a).ten}" vào "${byId('don_vi',t).ten}"?`,async()=>{await mergeDV(a,t);done('Đã gộp')})});
+  document.querySelectorAll('[data-lok]').forEach(b=>b.onclick=async()=>{const id=b.dataset.lok,p={duyet:true};document.querySelectorAll(`[data-l="${id}"]`).forEach(i=>p[i.dataset.f]=i.value.trim());await DB.update('lua_chon',id,p);done('Đã duyệt')});
+}
+async function mergeKT(a,t){
+  for(const l of ktOffers(a)){
+    const ex=S.lua_chon.find(x=>x.ky_thuat_id===t&&x.don_vi_id===l.don_vi_id);
+    if(ex){ for(const d of S.dang_ky.filter(d=>d.lua_chon_id===l.id)) await DB.update('dang_ky',d.id,{lua_chon_id:ex.id,ky_thuat_id:t}); await DB.remove('lua_chon',l.id); }
+    else await DB.update('lua_chon',l.id,{ky_thuat_id:t});
+  }
+  await DB.updateWhere('dang_ky','ky_thuat_id',a,{ky_thuat_id:t});
+  await DB.remove('ky_thuat',a);
+}
+async function mergeDV(a,t){
+  for(const l of S.lua_chon.filter(l=>l.don_vi_id===a)){
+    const ex=S.lua_chon.find(x=>x.ky_thuat_id===l.ky_thuat_id&&x.don_vi_id===t);
+    if(ex){ for(const d of S.dang_ky.filter(d=>d.lua_chon_id===l.id)) await DB.update('dang_ky',d.id,{lua_chon_id:ex.id}); await DB.remove('lua_chon',l.id); }
+    else await DB.update('lua_chon',l.id,{don_vi_id:t});
+  }
+  await DB.updateWhere('dang_ky','don_vi_id',a,{don_vi_id:t});
+  await DB.remove('don_vi',a);
+}
+function aDM(){
+  let q='';
+  const draw=()=>{
+    const nq=norm(q); const list=S.ky_thuat.filter(k=>!nq||norm(k.ten+' '+k.chuyen_nganh).includes(nq)).sort((a,b)=>a.chuyen_nganh.localeCompare(b.chuyen_nganh,'vi')||a.ten.localeCompare(b.ten,'vi'));
+    $('#dmList').innerHTML=`<table class="tbl"><thead><tr><th>Chuyên ngành</th><th>Kỹ thuật</th><th>Đơn vị · đối tượng · thời gian · gói · học phí</th><th></th></tr></thead><tbody>${list.map(k=>`<tr><td>${esc(k.chuyen_nganh)}</td><td><b>${esc(k.ten)}</b>${!k.duyet?' <span class="badge b-wait">chờ duyệt</span>':''}</td>
+      <td>${ktOffers(k.id).map(o=>`<div>${esc(byId('don_vi',o.don_vi_id)?.ten)} · ${esc(o.doi_tuong)} · ${esc(o.thoi_gian)} · ${esc(o.goi)} · ${esc(o.hoc_phi)}</div>`).join('')}</td>
+      <td style="white-space:nowrap"><button class="btn sm" data-kedit="${k.id}">Sửa</button></td></tr>`).join('')}</tbody></table>`;
+    document.querySelectorAll('[data-kedit]').forEach(b=>b.onclick=()=>dlgKT(byId('ky_thuat',b.dataset.kedit)));
+  };
+  $('#aBody').innerHTML=`<div class="tools"><input type="text" id="dmQ" placeholder="Tìm…"><button class="btn pri" id="dmAdd">＋ Thêm kỹ thuật</button><button class="btn" id="dmTpl">⬇ File mẫu nhập danh mục</button>
+    <label class="btn" style="margin:0;color:inherit">⬆ Nhập danh mục từ Excel<input type="file" id="dmFile" accept=".xlsx" hidden></label></div>
+    <div class="muted" style="margin-bottom:8px">Dùng “Nhập danh mục từ Excel” khi có danh mục mới (VD: BV Việt Tiệp). Kỹ thuật trùng tên sẽ tự gộp, chỉ thêm đơn vị mới vào kỹ thuật đó.</div>
+    <div class="scroll" id="dmList"></div>`;
+  $('#dmQ').oninput=e=>{q=e.target.value;draw()}; draw();
+  $('#dmAdd').onclick=()=>dlgKT(null); $('#dmTpl').onclick=dmTemplate; $('#dmFile').onchange=e=>e.target.files[0]&&dmImport(e.target.files[0]);
+}
+function dlgKT(k){
+  const isNew=!k; k=k||{id:uid(),ten:'',chuyen_nganh:'',duyet:true};
+  const offs=isNew?[]:ktOffers(k.id).map(o=>({...o}));
+  const rowH=(o,i)=>`<tr data-i="${i}"><td><select data-f="don_vi_id">${S.don_vi.map(d=>`<option value="${d.id}" ${o.don_vi_id===d.id?'selected':''}>${esc(d.ten)}</option>`).join('')}</select></td>
+    ${['doi_tuong','thoi_gian','goi','hoc_phi'].map(f=>`<td><input type="text" data-f="${f}" value="${esc(o[f]||'')}"></td>`).join('')}<td><button class="btn sm dan" data-rm="${i}">✕</button></td></tr>`;
+  const back=()=>adminView();
+  const draw=()=>{
+    openDlg(`<h3>${isNew?'Thêm':'Sửa'} kỹ thuật</h3><div class="row"><div class="fld"><label>Tên</label><input type="text" id="kTen" value="${esc(k.ten)}"></div><div class="fld"><label>Chuyên ngành</label><input type="text" id="kCN" list="dlCN" value="${esc(k.chuyen_nganh)}">${cnDatalist()}</div></div>
+    <label>Các lựa chọn đơn vị</label><table class="tbl" id="kOffs"><thead><tr><th>Đơn vị</th><th>Đối tượng</th><th>Thời gian</th><th>Gói</th><th>Học phí</th><th></th></tr></thead><tbody>${offs.map(rowH).join('')}</tbody></table>
+    <button class="btn sm" id="kAddO" style="margin-top:6px">＋ Thêm đơn vị</button>
+    <div class="dft">${isNew?'':'<button class="btn dan" id="kDel" style="margin-right:auto">Xóa kỹ thuật</button>'}<button class="btn" id="kCancel">Hủy</button><button class="btn pri" id="kOK">Lưu</button></div>`,true);
+    $('#kCancel').onclick=back;
+    const collect=()=>{k.ten=$('#kTen').value.trim();k.chuyen_nganh=$('#kCN').value.trim();document.querySelectorAll('#kOffs tbody tr').forEach(tr=>{const o=offs[+tr.dataset.i];tr.querySelectorAll('[data-f]').forEach(i=>o[i.dataset.f]=i.value.trim())})};
+    $('#kAddO').onclick=()=>{collect();offs.push({id:uid(),ky_thuat_id:k.id,don_vi_id:S.don_vi[0]?.id,duyet:true,_new:true});draw()};
+    document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{collect();const o=offs[+b.dataset.rm];if(S.dang_ky.some(d=>d.lua_chon_id===o.id))return toast('Lựa chọn này đã có khoa đăng ký, không xóa được');offs.splice(+b.dataset.rm,1);o._del=true;draw()});
+    if($('#kDel')) $('#kDel').onclick=()=>{const n=S.dang_ky.filter(d=>d.ky_thuat_id===k.id).length;if(n)return toast(`Có ${n} đăng ký dùng kỹ thuật này – hãy gộp hoặc xóa đăng ký trước`,3500);
+      confirmDlg('Xóa kỹ thuật này?',async()=>{for(const l of ktOffers(k.id))await DB.remove('lua_chon',l.id);await DB.remove('ky_thuat',k.id);await loadAll();render();adminView();toast('Đã xóa')})};
+    $('#kOK').onclick=async()=>{collect();if(!k.ten||!k.chuyen_nganh)return toast('Nhập tên và chuyên ngành');
+      try{ if(isNew) await DB.insert('ky_thuat',{id:k.id,ten:k.ten,chuyen_nganh:k.chuyen_nganh,duyet:true}); else await DB.update('ky_thuat',k.id,{ten:k.ten,chuyen_nganh:k.chuyen_nganh});
+        const keep=new Set(offs.map(o=>o.id));
+        for(const old of ktOffers(k.id)) if(!keep.has(old.id)) await DB.remove('lua_chon',old.id);
+        for(const o of offs){const {_new,_del,...r}=o; if(_new) await DB.insert('lua_chon',r); else await DB.update('lua_chon',o.id,{don_vi_id:r.don_vi_id,doi_tuong:r.doi_tuong,thoi_gian:r.thoi_gian,goi:r.goi,hoc_phi:r.hoc_phi});
+          await DB.updateWhere('dang_ky','lua_chon_id',o.id,{don_vi_id:r.don_vi_id});}
+        await loadAll();render();back();toast('Đã lưu')}catch(e){toast('Lỗi: '+e.message,4000)}};
+  };
+  draw();
+}
+async function dmTemplate(){
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Danh mục');
+  ws.addRow(['Chuyên ngành','Tên kỹ thuật/khóa học','Đối tượng học viên','Thời gian đào tạo','Gói (Cơ bản/Nâng cao/Chuyên sâu)','Học phí']).font={bold:true};
+  ws.addRow(['Hồi sức tích cực','Ví dụ: Lọc máu liên tục','Bác sĩ','03 tháng','Nâng cao','5.000.000']);
+  ws.columns.forEach((c,i)=>c.width=[24,50,30,14,20,16][i]);
+  dl(await wb.xlsx.writeBuffer(),'Mau_nhap_danh_muc.xlsx');
+}
+async function dmImport(file){
+  try{
+    const wb=new ExcelJS.Workbook(); await wb.xlsx.load(await file.arrayBuffer()); const ws=wb.worksheets[0];
+    const rows=[]; ws.eachRow((r,i)=>{if(i===1)return;const v=[1,2,3,4,5,6].map(c=>{const x=r.getCell(c).value;return x==null?'':String(x.text??x.result??x).trim()});if(v[1])rows.push(v)});
+    if(!rows.length) return toast('File không có dữ liệu');
+    openDlg(`<h3>Nhập ${rows.length} dòng danh mục</h3><div class="row"><div class="fld"><label>Đơn vị đào tạo/chuyển giao</label><input type="text" id="iDV" list="dlDV" placeholder="VD: Bệnh viện Hữu nghị Việt Tiệp">${dvDatalist()}</div>
+      <div class="fld"><label>Tuyến</label><select id="iT"><option value="TP">Tuyến thành phố (PL2)</option><option value="TW">Trung ương (PL1)</option></select></div></div>
+      <div class="fld"><label>Ghi chú nguồn (số văn bản)</label><input type="text" id="iGC"></div>
+      <div class="dft"><button class="btn" onclick="adminView()">Hủy</button><button class="btn pri" id="iOK">Nhập</button></div>`,true);
+    $('#iOK').onclick=async()=>{
+      const ten=$('#iDV').value.trim(); if(!ten) return toast('Nhập tên đơn vị');
+      let dv=S.don_vi.find(d=>norm(d.ten)===norm(ten)); if(!dv){dv={id:uid(),ten,tuyen:$('#iT').value,duyet:true,ghi_chu:$('#iGC').value.trim()};await DB.insert('don_vi',dv)}
+      const newK=[],newL=[]; const map=new Map(S.ky_thuat.map(k=>[norm(k.ten),k]));
+      rows.forEach(([cn,tk,dt,tg,goi,hp])=>{let k=map.get(norm(tk)); if(!k){k={id:uid(),ten:tk,chuyen_nganh:cn||'Khác',duyet:true};map.set(norm(tk),k);newK.push(k)}
+        newL.push({id:uid(),ky_thuat_id:k.id,don_vi_id:dv.id,doi_tuong:dt,thoi_gian:tg,goi,hoc_phi:hp,duyet:true})});
+      await DB.insert('ky_thuat',newK); await DB.insert('lua_chon',newL); await loadAll(); render(); ATAB='dm'; adminView();
+      toast(`Đã nhập: ${newK.length} kỹ thuật mới, ${rows.length-newK.length} dòng gộp vào kỹ thuật có sẵn`,4000);
+    };
+  }catch(e){toast('Không đọc được file: '+e.message,4000)}
+}
+function aDV(){
+  $('#aBody').innerHTML=`<div class="tools"><button class="btn pri" id="dvAdd">＋ Thêm đơn vị</button></div><div class="scroll"><table class="tbl"><thead><tr><th>Tên đơn vị</th><th>Tuyến</th><th>Ghi chú</th><th>Số KT</th><th></th></tr></thead><tbody>
+  ${S.don_vi.map(d=>`<tr><td><input type="text" data-dvf="${d.id}" data-f="ten" value="${esc(d.ten)}"></td><td><select data-dvf="${d.id}" data-f="tuyen"><option value="TW" ${d.tuyen==='TW'?'selected':''}>Trung ương (PL1)</option><option value="TP" ${d.tuyen==='TP'?'selected':''}>Tuyến TP (PL2)</option></select></td>
+   <td><input type="text" data-dvf="${d.id}" data-f="ghi_chu" value="${esc(d.ghi_chu||'')}"></td><td>${S.lua_chon.filter(l=>l.don_vi_id===d.id).length}</td>
+   <td style="white-space:nowrap"><button class="btn sm pri" data-dvs="${d.id}">Lưu</button> <button class="btn sm dan" data-dvd="${d.id}">Xóa</button></td></tr>`).join('')}</tbody></table></div>`;
+  $('#dvAdd').onclick=async()=>{await DB.insert('don_vi',{id:uid(),ten:'Đơn vị mới',tuyen:'TP',duyet:true,ghi_chu:''});await loadAll();aDV()};
+  document.querySelectorAll('[data-dvs]').forEach(b=>b.onclick=async()=>{const p={};document.querySelectorAll(`[data-dvf="${b.dataset.dvs}"]`).forEach(i=>p[i.dataset.f]=i.value.trim());await DB.update('don_vi',b.dataset.dvs,p);await loadAll();render();toast('Đã lưu')});
+  document.querySelectorAll('[data-dvd]').forEach(b=>b.onclick=()=>{const id=b.dataset.dvd;if(S.lua_chon.some(l=>l.don_vi_id===id))return toast('Đơn vị đang có kỹ thuật – xóa/gộp ở tab Duyệt hoặc Danh mục trước',3500);confirmDlg('Xóa đơn vị?',async()=>{await DB.remove('don_vi',id);await loadAll();adminView()})});
+}
+function aKhoa(){
+  $('#aBody').innerHTML=`<div class="tools"><button class="btn pri" id="khAdd">＋ Thêm khoa/phòng</button><button class="btn" id="khPaste">📋 Dán cả danh sách</button><button class="btn" id="khStd">↺ Dùng danh sách chuẩn (10 khoa/phòng)</button><button class="btn gr" id="khSaveAll">💾 Lưu tất cả</button></div>
+  <div class="muted" style="margin-bottom:8px">Sửa trực tiếp tên/thứ tự rồi bấm <b>Lưu tất cả</b>. Khoa đã có đăng ký chỉ đổi tên được, không xóa được.</div><div class="scroll"><table class="tbl"><thead><tr><th style="width:80px">Thứ tự</th><th>Tên khoa/phòng</th><th>Số mục</th><th></th></tr></thead><tbody>
+  ${S.khoa.map(k=>`<tr><td><input type="number" data-khf="${k.id}" data-f="thu_tu" value="${k.thu_tu||0}"></td><td><input type="text" data-khf="${k.id}" data-f="ten" value="${esc(k.ten)}"></td><td>${S.dang_ky.filter(d=>d.khoa_id===k.id).length}</td>
+   <td style="white-space:nowrap"><button class="btn sm pri" data-khs="${k.id}">Lưu</button> <button class="btn sm dan" data-khd="${k.id}">Xóa</button></td></tr>`).join('')}</tbody></table></div>`;
+  $('#khAdd').onclick=async()=>{await DB.insert('khoa',{id:uid(),ten:'Khoa mới',thu_tu:S.khoa.length+1});await loadAll();render();aKhoa()};
+  $('#khSaveAll').onclick=async()=>{for(const k of S.khoa){const p={};document.querySelectorAll(`[data-khf="${k.id}"]`).forEach(i=>p[i.dataset.f]=i.dataset.f==='thu_tu'?+i.value:i.value.trim());if(p.ten&&(p.ten!==k.ten||p.thu_tu!==k.thu_tu))await DB.update('khoa',k.id,p)}await loadAll();render();aKhoa();toast('Đã lưu danh sách')};
+  $('#khStd').onclick=()=>replaceKhoa(SEED_KHOA);
+  $('#khPaste').onclick=()=>{openDlg(`<h3>Dán danh sách khoa/phòng</h3><div class="sub">Mỗi dòng 1 khoa/phòng, theo đúng thứ tự hiển thị. Danh sách cũ sẽ được thay thế (khoa đã có đăng ký mà không có trong danh sách mới sẽ được giữ lại).</div>
+    <textarea id="khTxt" style="min-height:260px">${esc(S.khoa.map(k=>k.ten).join('\n'))}</textarea>
+    <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="khOK">Thay thế</button></div>`);
+    $('#khOK').onclick=()=>replaceKhoa($('#khTxt').value.split('\n').map(x=>x.trim()).filter(Boolean));};
+  document.querySelectorAll('[data-khs]').forEach(b=>b.onclick=async()=>{const p={};document.querySelectorAll(`[data-khf="${b.dataset.khs}"]`).forEach(i=>p[i.dataset.f]=i.dataset.f==='thu_tu'?+i.value:i.value.trim());await DB.update('khoa',b.dataset.khs,p);await loadAll();render();toast('Đã lưu')});
+  document.querySelectorAll('[data-khd]').forEach(b=>b.onclick=()=>{const id=b.dataset.khd;if(S.dang_ky.some(d=>d.khoa_id===id))return toast('Khoa đã có dữ liệu, không xóa được');confirmDlg('Xóa khoa/phòng?',async()=>{await DB.remove('khoa',id);await loadAll();render();adminView()})});
+}
+async function replaceKhoa(names){
+  try{
+    const used=new Set(S.dang_ky.map(d=>d.khoa_id)); const keep=new Set();
+    for(let i=0;i<names.length;i++){const ex=S.khoa.find(k=>norm(k.ten)===norm(names[i])&&!keep.has(k.id));
+      if(ex){keep.add(ex.id);await DB.update('khoa',ex.id,{ten:names[i],thu_tu:i+1})} else {const id=uid();keep.add(id);await DB.insert('khoa',{id,ten:names[i],thu_tu:i+1})}}
+    let n=names.length,kept=0; for(const k of S.khoa){ if(keep.has(k.id)) continue; if(used.has(k.id)){kept++;await DB.update('khoa',k.id,{thu_tu:++n})} else await DB.remove('khoa',k.id) }
+    await loadAll();render();ATAB='khoa';adminView();toast(kept?`Đã cập nhật. Giữ lại ${kept} khoa cũ vì đã có đăng ký – đổi tên hoặc gộp thủ công`:'Đã cập nhật danh sách khoa/phòng',4000);
+  }catch(e){toast('Lỗi: '+e.message,4000)}
+}
+function aCH(){
+  const c=cfg(); const hc=c.han_chot?(d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16))(new Date(c.han_chot)):'';
+  $('#aBody').innerHTML=`<div class="row"><div class="card">
+    <div class="fld"><label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text)"><input type="checkbox" id="cMo" ${c.mo?'checked':''}> Cho phép các khoa nhập/sửa dữ liệu</label><div class="muted">Bỏ chọn = khóa: chỉ quản trị được sửa.</div></div>
+    <div class="fld"><label>Hạn chót (sau thời điểm này tự khóa)</label><input type="datetime-local" id="cHan" value="${hc}"></div>
+    <div class="fld"><label>Thông báo hiển thị đầu trang</label><textarea id="cTB">${esc(c.thong_bao||'')}</textarea></div>
+    <button class="btn pri" id="cSave">Lưu cấu hình</button></div>
+    <div class="card"><b>Dữ liệu</b><p class="muted">Chế độ: ${isDemo?'<b>dùng thử</b> – dữ liệu lưu trên trình duyệt này, người khác không thấy. Dán GSHEET_URL trong file để dùng nhiều người.':'<b>Google Sheet</b> – dùng chung cho mọi máy.'}</p>
+    <div class="tools"><button class="btn" id="cBK">⬇ Sao lưu JSON</button><label class="btn" style="margin:0;color:inherit">⬆ Khôi phục JSON<input type="file" id="cRS" accept=".json" hidden></label></div>
+    <div class="tools"><button class="btn" id="cSeed">Nạp lại danh mục mẫu (BV Phổi TƯ + Kiến An)</button></div>
+    <div class="tools"><button class="btn dan" id="cClr">Xóa toàn bộ đăng ký của các khoa</button></div></div></div>`;
+  $('#cSave').onclick=async()=>{const p={mo:$('#cMo').checked,han_chot:$('#cHan').value?new Date($('#cHan').value).toISOString():null,thong_bao:$('#cTB').value.trim()};
+    if(S.cau_hinh.length) await DB.update('cau_hinh',1,p); else await DB.insert('cau_hinh',{id:1,...p}); await loadAll();render();adminView();toast('Đã lưu cấu hình')};
+  $('#cBK').onclick=backup;
+  $('#cRS').onchange=e=>{const f=e.target.files[0];if(!f)return;confirmDlg('Khôi phục sẽ GHI ĐÈ toàn bộ dữ liệu hiện có. Tiếp tục?',async()=>{const d=JSON.parse(await f.text());
+    for(const t of [...TABLES].reverse()) await DB.clear(t); for(const t of TABLES) if(d[t]?.length) await DB.insert(t,d[t]); await loadAll();render();adminView();toast('Đã khôi phục')})};
+  $('#cSeed').onclick=()=>confirmDlg('Nạp lại danh mục mẫu sẽ XÓA danh mục, đơn vị, danh sách khoa và TOÀN BỘ đăng ký hiện có. Tiếp tục?',async()=>{await seedIfEmpty(true);render();adminView();toast('Đã nạp lại')});
+  $('#cClr').onclick=()=>confirmDlg('Xóa toàn bộ đăng ký của tất cả khoa?',async()=>{await DB.clear('dang_ky');await loadAll();render();adminView();toast('Đã xóa')});
+}
+
+/* ================= XUẤT EXCEL ================= */
+function dl(buf,name){const b=new Blob([buf],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function backup(){dl(new TextEncoder().encode(JSON.stringify(S,null,1)),'cgkt2027_saoluu_'+new Date().toISOString().slice(0,10)+'.json')}
+const TNR={name:'Times New Roman',size:14};
+const BRD={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+function sheetPL(wb,name,title,widths,headers,rows,titleRange,size=14){
+  const ws=wb.addWorksheet(name,{pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  widths.forEach((w,i)=>ws.getColumn(i+1).width=w);
+  const t=ws.getCell(titleRange.split(':')[0]); t.value=title; t.font={...TNR,size,bold:true}; t.alignment={horizontal:'center',vertical:'middle',wrapText:true}; ws.mergeCells(titleRange); ws.getRow(+titleRange.match(/\d+/)[0]).height=40;
+  const hRow=size===14?3:2;
+  const h=ws.getRow(hRow); headers.forEach((v,i)=>{const c=h.getCell(i+1);c.value=v;c.font={...TNR,size:size===14?14:11,bold:true};c.border=BRD;c.alignment={horizontal:'center',vertical:'middle',wrapText:true}}); h.height=size===14?56:30;
+  let r=hRow+1;
+  rows.forEach(v=>{const row=ws.getRow(r++);
+    if(v.section){const c=row.getCell(1);c.value=v.section;ws.mergeCells(row.number,1,row.number,headers.length);c.font={...TNR,size:size===14?13:11,bold:true,italic:true};c.border=BRD;c.alignment={vertical:'middle'};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEEF4FB'}};return}
+    v.forEach((x,i)=>{const c=row.getCell(i+1);c.value=x;c.font={...TNR,size:size===14?13:11};c.border=BRD;c.alignment={vertical:'top',wrapText:true,horizontal:i===0?'center':'left'}})});
+  if(!rows.length){const row=ws.getRow(r);headers.forEach((_,i)=>{const c=row.getCell(i+1);c.border=BRD;c.font=TNR});row.getCell(1).value='';}
+  return ws;
+}
+function nhanRows(pl){
+  const out=[]; let cn=null, i=0;
+  groupNhan(pl).forEach(x=>{
+    if(x.k.chuyen_nganh!==cn){cn=x.k.chuyen_nganh;out.push({section:cn})}
+    const sl=x.items.reduce((s,d)=>s+(+d.so_nguoi||0),0);
+    const ofs=uniq(x.items.map(d=>{const o=byId('lua_chon',d.lua_chon_id);return o?[o.goi,o.thoi_gian].filter(Boolean).join(', '):''}));
+    const gc=[ 'Hình thức: '+uniq(x.items.map(d=>d.hinh_thuc)).join('; '),
+      'Số người: '+sl+(uniq(x.items.map(d=>d.doi_tuong)).length?' ('+uniq(x.items.map(d=>d.doi_tuong)).join('; ')+')':''),
+      ofs.length?'Khóa: '+ofs.join('; '):'' ,
+      ...x.items.filter(d=>d.ghi_chu).map(d=>khoaTen(d.khoa_id)+': '+d.ghi_chu)].filter(Boolean).join('\n');
+    out.push([++i,x.k.ten,x.v.ten,CFG.TEN_BV+'\n('+uniq(x.items.map(d=>khoaTen(d.khoa_id))).join('; ')+')',uniq(x.items.map(d=>d.thoi_gian)).join('; '),gc]);
+  });
+  return out;
+}
+async function exportWB(full){
+  try{
+  const wb=new ExcelJS.Workbook(); wb.creator=CFG.TEN_BV;
+  if(full) sheetTongQuan(wb);
+  const H=['TT','TÊN KỸ THUẬT CHUYỂN GIAO ','ĐƠN VỊ CHUYỂN GIAO','ĐƠN VỊ NHẬN CHUYỂN GIAO','DỰ KIẾN THỜI GIAN THỰC HIỆN CHUYỂN GIAO','GHI CHÚ'];
+  sheetPL(wb,'Nhận từ Trung ương','PHỤ LỤC 1. NHU CẦU NHẬN CHUYỂN GIAO KỸ THUẬT TỪ CÁC BV TRUNG ƯƠNG  NĂM 2027',[9,40,26,30,22,40],H,nhanRows(1),'A1:F1');
+  sheetPL(wb,'Nhận từ tuyến thành phố','PHỤ LỤC 2. NHU CẦU NHẬN CHUYỂN GIAO KỸ THUẬT TỪ CÁC BV TUYẾN  THÀNH PHỐ  NĂM 2027',[9,40,26,30,22,40],H,nhanRows(2),'A1:F1');
+  const cg=S.dang_ky.filter(d=>d.loai==='cg').sort((a,b)=>a.ten_kt.localeCompare(b.ten_kt,'vi'));
+  sheetPL(wb,'Chuyển giao cho tuyến dưới','PHỤ LỤC 3. NHU CẦU CHUYỂN GIAO KỸ THUẬT TỪ CÁC BV TUYẾN  THÀNH PHỐ  NĂM 2027',[9,40,30,32,22,30],H,
+    cg.map((d,i)=>[i+1,d.ten_kt,CFG.TEN_BV+'\n('+khoaTen(d.khoa_id)+')',d.don_vi_nhan,d.thoi_gian,[d.hinh_thuc,d.ghi_chu].filter(Boolean).join('\n')]),'A1:F1');
+  const lp=S.dang_ky.filter(d=>d.loai==='lp');
+  sheetPL(wb,'Hỗ trợ CB luân phiên ','PHỤ LỤC 4: HỖ TRỢ CÁN BỘ LUÂN PHIÊN NĂM 2027',[7.5,30,34,24,20,34],['STT','ĐƠN VỊ HỖ TRỢ','ĐƠN VỊ NHẬN HỖ TRỢ','CHUYÊN KHOA','THỜI GIAN','GHI CHÚ'],
+    lp.map((d,i)=>{const me=CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')';return [i+1,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac,d.chuyen_khoa,d.thoi_gian,[d.so_nguoi?'Số cán bộ: '+d.so_nguoi:'',d.doi_tuong,d.ghi_chu].filter(Boolean).join('\n')]}),'A1:F1',12);
+  if(full) sheetChiTiet(wb);
+  const dt=new Date().toISOString().slice(0,10);
+  dl(await wb.xlsx.writeBuffer(), full?`Tong_hop_CGKT_2027_BV_Phoi_HP_${dt}.xlsx`:'Phu_luc_khao_sat_CGKT_2027_BV_Phoi_Hai_Phong.xlsx'); toast('Đã xuất file');
+  }catch(e){console.error(e);toast('Lỗi xuất: '+e.message,4000)}
+}
+function sheetChiTiet(wb){
+  const ws=wb.addWorksheet('Chi tiết theo khoa');
+  const H=['STT','Khoa/Phòng','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí tham khảo','Ghi chú','Người khai','SĐT','Trạng thái','Cập nhật'];
+  ws.addRow(H); ws.getRow(1).font={bold:true}; ws.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F0FA'}};
+  [...S.dang_ky].sort((a,b)=>khoaTen(a.khoa_id).localeCompare(khoaTen(b.khoa_id),'vi')||plOf(a)-plOf(b)).forEach((d,i)=>{
+    const k=byId('ky_thuat',d.ky_thuat_id),v=byId('don_vi',d.don_vi_id),o=byId('lua_chon',d.lua_chon_id),me=CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')';
+    const [ten,dv,nhan]= d.loai==='nhan'?[k?.ten,v?.ten,me]: d.loai==='cg'?[d.ten_kt,me,d.don_vi_nhan]:['Chuyên khoa: '+d.chuyen_khoa,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac];
+    ws.addRow([i+1,khoaTen(d.khoa_id),'PL'+plOf(d),k?.chuyen_nganh||'',ten,dv,nhan,d.hinh_thuc||'',d.so_nguoi??'',d.doi_tuong||'',d.thoi_gian||'',o?[o.goi,o.thoi_gian].filter(Boolean).join(', '):'',o?.hoc_phi||'',d.ghi_chu||'',d.nguoi_khai||'',d.sdt||'',(k&&!k.duyet)||(v&&!v.duyet)?'Chờ duyệt':'',d.updated_at?new Date(d.updated_at).toLocaleString('vi-VN'):'']);
+  });
+  [6,24,8,24,44,28,28,22,8,24,16,18,16,30,18,12,10,18].forEach((w,i)=>ws.getColumn(i+1).width=w);
+  ws.eachRow(r=>r.alignment={vertical:'top',wrapText:true}); ws.views=[{state:'frozen',ySplit:1}]; ws.autoFilter={from:'A1',to:{row:1,column:H.length}};
+}
+function sheetTongQuan(wb){
+  const ws=wb.addWorksheet('Tổng quan',{pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  const F={name:'Times New Roman',size:12};
+  ws.mergeCells('A1:J1'); ws.getCell('A1').value='TỔNG HỢP NHU CẦU CHUYỂN GIAO KỸ THUẬT & HỖ TRỢ CHUYÊN MÔN NĂM 2027 – '+CFG.TEN_BV.toUpperCase();
+  ws.getCell('A1').font={...F,size:14,bold:true}; ws.getCell('A1').alignment={horizontal:'center',wrapText:true}; ws.getRow(1).height=36;
+  ws.mergeCells('A2:J2'); ws.getCell('A2').value='Số liệu xuất lúc '+new Date().toLocaleString('vi-VN')+(isOpen()?' (đang mở nhập liệu)':' (đã khóa nhập liệu)'); ws.getCell('A2').font={...F,italic:true}; ws.getCell('A2').alignment={horizontal:'center'};
+  const H=['STT','Khoa/Phòng','PL1 – Nhận từ TƯ','PL2 – Nhận từ tuyến TP','PL3 – CG tuyến dưới','PL4 – Luân phiên','Tổng số mục','Số người dự kiến cử/nhận','Người khai – SĐT','Cập nhật lần cuối'];
+  const hr=ws.getRow(4); H.forEach((v,i)=>{const c=hr.getCell(i+1);c.value=v;c.font={...F,bold:true};c.border=BRD;c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F0FA'}}}); hr.height=34;
+  let r=5; const tot=[0,0,0,0,0,0];
+  S.khoa.forEach((k,i)=>{const ds=S.dang_ky.filter(d=>d.khoa_id===k.id); const c=[1,2,3,4].map(p=>ds.filter(d=>plOf(d)===p).length); const sl=ds.filter(d=>d.loai!=='cg').reduce((s,d)=>s+(+d.so_nguoi||0),0);
+    const last=ds.map(x=>x.updated_at||x.created_at).sort().pop(); [...c,ds.length,sl].forEach((v,j)=>tot[j]+=v);
+    const row=ws.getRow(r++); [i+1,k.ten,...c,ds.length,sl,uniq(ds.map(d=>[d.nguoi_khai,d.sdt].filter(Boolean).join(' – '))).join('; ')||(ds.length?'':'CHƯA KHAI'),last?new Date(last).toLocaleString('vi-VN'):''].forEach((v,j)=>{const cl=row.getCell(j+1);cl.value=v;cl.font={...F,color:!ds.length&&j===8?{argb:'FFC00000'}:undefined,bold:!ds.length&&j===8};cl.border=BRD;cl.alignment={vertical:'top',wrapText:true,horizontal:j>=2&&j<=7||j===0?'center':'left'}})});
+  const tr=ws.getRow(r); ['', 'TỔNG CỘNG',...tot,'',''].forEach((v,j)=>{const cl=tr.getCell(j+1);cl.value=v;cl.font={...F,bold:true};cl.border=BRD;cl.alignment={horizontal:j>=2?'center':'left'}});
+  r+=2; const g1=groupNhan(1).length,g2=groupNhan(2).length;
+  [['Số kỹ thuật PL1 sau khi gộp các khoa trùng',g1],['Số kỹ thuật PL2 sau khi gộp các khoa trùng',g2],['Số khoa/phòng đã khai',new Set(S.dang_ky.map(d=>d.khoa_id)).size+'/'+S.khoa.length],
+   ['Đề xuất kỹ thuật/đơn vị mới chưa duyệt',S.ky_thuat.filter(k=>!k.duyet).length+S.don_vi.filter(d=>!d.duyet).length]].forEach(([a,b])=>{const row=ws.getRow(r++);ws.mergeCells(row.number,1,row.number,6);row.getCell(1).value=a;row.getCell(7).value=b;row.getCell(1).font=F;row.getCell(7).font={...F,bold:true};row.getCell(7).alignment={horizontal:'center'}});
+  [6,40,13,13,13,13,11,14,30,20].forEach((w,i)=>ws.getColumn(i+1).width=w);
+}
+
+/* ================= KHỞI ĐỘNG ================= */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{TAB=t.dataset.t;render()});
+$('#selKhoa').onchange=e=>{ls('cgkt_khoa',e.target.value);render()};
+$('#inNguoi').oninput=e=>ls('cgkt_nguoi',e.target.value); $('#inSdt').oninput=e=>ls('cgkt_sdt',e.target.value);
+$('#btnAdmin').onclick=openAdmin;
+$('#btnPrint').onclick=()=>{TAB='phieu';render();setTimeout(()=>window.print(),200)};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDlg()});
+(async function init(){
+  $('#inNguoi').value=ls('cgkt_nguoi')||''; $('#inSdt').value=ls('cgkt_sdt')||'';
+  try{
+    await loadAll(); ADMIN=await DB.isAdmin();
+    if(isDemo) await seedIfEmpty(false);
+    const OLD_KHOA=['Khoa Khám bệnh','Khoa Cấp cứu – Hồi sức tích cực','Khoa Lao','Khoa Bệnh phổi'];
+    if(S.khoa.length===18 && OLD_KHOA.every((t,i)=>S.khoa[i]?.ten===t) && !S.dang_ky.length){ for(const k of S.khoa) await DB.remove('khoa',k.id); await DB.insert('khoa',SEED_KHOA.map((t,i)=>({id:uid(),ten:t,thu_tu:i+1}))); await loadAll(); }
+    else if(!S.ky_thuat.length && ADMIN) await seedIfEmpty(false);
+    render();
+    if(!isDemo && !S.ky_thuat.length) $('#view').innerHTML='<div class="card empty">Chưa có danh mục. Quản trị đăng nhập để nạp danh mục mẫu lần đầu.</div>';
+  }catch(e){console.error(e);$('#view').innerHTML=`<div class="card empty">Không kết nối được dữ liệu: ${esc(e.message||e)}</div>`}
+})();
+</script>
+</body>
+</html>

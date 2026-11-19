@@ -1,0 +1,177 @@
+/**
+ * Máy chủ Google Apps Script cho web Khảo sát nhu cầu CGKT 2027 – BV Phổi Hải Phòng
+ * Dữ liệu lưu trực tiếp trong Google Sheet này (mỗi bảng 1 tab).
+ *
+ * CÀI ĐẶT (1 lần):
+ *  1. Tạo 1 Google Sheet mới → Tiện ích mở rộng → Apps Script → dán toàn bộ file này.
+ *  2. Đổi ADMIN_PW bên dưới thành mật khẩu quản trị của anh → Lưu.
+ *  3. Chọn hàm "caiDat" → Chạy (cấp quyền khi được hỏi) → các tab được tạo.
+ *  4. Triển khai → Triển khai mới → Loại: Ứng dụng web
+ *       Thực thi với tư cách: Tôi   |   Người có quyền truy cập: Bất kỳ ai
+ *     → Sao chép URL dạng https://script.google.com/macros/s/.../exec
+ *  5. Dán URL đó vào GSHEET_URL trong file index.html.
+ *  Sửa code sau này: Triển khai → Quản lý triển khai → Sửa → Phiên bản mới.
+ */
+const ADMIN_PW = 'doi-mat-khau-nay';
+
+const TABLES = {
+  cau_hinh: ['id','mo','han_chot','thong_bao'],
+  khoa:     ['id','ten','thu_tu'],
+  don_vi:   ['id','ten','tuyen','ghi_chu','duyet'],
+  ky_thuat: ['id','ten','chuyen_nganh','duyet','de_xuat_khoa','created_at'],
+  lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet'],
+  dang_ky:  ['id','khoa_id','loai','ky_thuat_id','lua_chon_id','don_vi_id','ten_kt','don_vi_nhan','huong','don_vi_khac','chuyen_khoa',
+             'hinh_thuc','so_nguoi','doi_tuong','thoi_gian','ghi_chu','nguoi_khai','sdt','created_at','updated_at']
+};
+const BOOL = {mo:1, duyet:1};
+const NUM  = {so_nguoi:1, thu_tu:1};
+const VIEW = 'Xem tổng hợp';
+const TEN_BV = 'Bệnh viện Phổi Hải Phòng';
+
+/* ---------- Sheet helpers ---------- */
+function ss_(){ return SpreadsheetApp.getActiveSpreadsheet(); }
+function sh_(t){
+  let s = ss_().getSheetByName(t);
+  if(!s){
+    s = ss_().insertSheet(t);
+    const h = TABLES[t];
+    s.getRange(1,1,1,h.length).setValues([h]).setFontWeight('bold').setBackground('#E8F0FA');
+    s.setFrozenRows(1);
+    s.getRange(1,1,s.getMaxRows(),h.length).setNumberFormat('@');
+  }
+  return s;
+}
+function header_(s){ return s.getRange(1,1,1,s.getLastColumn()).getValues()[0].map(String); }
+function readT_(t){
+  const s = sh_(t), last = s.getLastRow();
+  if(last < 2) return [];
+  const h = header_(s), v = s.getRange(2,1,last-1,h.length).getValues();
+  return v.filter(r => String(r[0]) !== '').map(r => {
+    const o = {};
+    h.forEach((k,i) => {
+      let x = r[i];
+      if(BOOL[k]) x = (x === true || String(x).toUpperCase() === 'TRUE');
+      else if(NUM[k] || (t==='cau_hinh' && k==='id')) x = (x === '' ? null : Number(x));
+      else x = (x === '' || x === null ? null : (x instanceof Date ? x.toISOString() : String(x)));
+      o[k] = x;
+    });
+    return o;
+  });
+}
+function cell_(v){ if(v === null || v === undefined) return ''; if(typeof v === 'boolean') return v ? 'TRUE' : 'FALSE'; return String(v); }
+function rowIndex_(s, col, val){ // trả về các số dòng (1-based) khớp
+  const h = header_(s), c = h.indexOf(col), last = s.getLastRow();
+  if(c < 0 || last < 2) return [];
+  const v = s.getRange(2, c+1, last-1, 1).getValues(), out = [];
+  v.forEach((r,i) => { if(String(r[0]) === String(val)) out.push(i+2); });
+  return out;
+}
+function rowObj_(s, h, r){ const v = s.getRange(r,1,1,h.length).getValues()[0], o = {}; h.forEach((k,i)=>o[k]=v[i]); return o; }
+
+/* ---------- Thao tác ---------- */
+function insert_(t, rows){
+  const s = sh_(t), h = header_(s);
+  if(!rows.length) return;
+  const vals = rows.map(r => h.map(k => cell_(r[k])));
+  const start = s.getLastRow() + 1;
+  s.getRange(start, 1, vals.length, h.length).setNumberFormat('@').setValues(vals);
+}
+function patchRow_(s, h, r, patch){
+  Object.keys(patch).forEach(k => { const c = h.indexOf(k); if(c >= 0 && k !== 'id') s.getRange(r, c+1).setNumberFormat('@').setValue(cell_(patch[k])); });
+}
+function update_(t, id, patch){ const s = sh_(t), h = header_(s); rowIndex_(s,'id',id).forEach(r => patchRow_(s,h,r,patch)); }
+function updateWhere_(t, col, val, patch){ const s = sh_(t), h = header_(s); rowIndex_(s,col,val).forEach(r => patchRow_(s,h,r,patch)); }
+function remove_(t, id){ const s = sh_(t); rowIndex_(s,'id',id).reverse().forEach(r => s.deleteRow(r)); }
+function clear_(t){ const s = sh_(t), last = s.getLastRow(); if(last >= 2) s.deleteRows(2, last-1); }
+
+function isOpen_(){
+  const c = readT_('cau_hinh')[0];
+  if(!c) return true;
+  return !!c.mo && (!c.han_chot || new Date() <= new Date(c.han_chot));
+}
+
+/* ---------- Kiểm tra quyền ---------- */
+function check_(req){
+  const admin = req.pw && req.pw === ADMIN_PW;
+  if(admin) return true;
+  const t = req.table, a = req.action;
+  if(!isOpen_()) throw new Error('Đã khóa nhập liệu');
+  if(t === 'dang_ky'){
+    if(a === 'insert') return true;
+    if(a === 'update' || a === 'remove'){
+      const s = sh_(t), h = header_(s), rows = rowIndex_(s,'id',req.id);
+      if(!rows.length) return true;
+      const o = rowObj_(s,h,rows[0]);
+      if(String(o.khoa_id) !== String(req.khoa_id)) throw new Error('Chỉ khoa/phòng đã đề xuất mới được sửa/xóa');
+      if(a === 'update' && req.patch && req.patch.khoa_id && String(req.patch.khoa_id) !== String(o.khoa_id)) throw new Error('Không được đổi khoa');
+      return true;
+    }
+  }
+  if(['ky_thuat','don_vi','lua_chon'].indexOf(t) >= 0 && a === 'insert' && [].concat(req.rows).every(r => !r.duyet)) return true;
+  throw new Error('Không có quyền thực hiện thao tác này');
+}
+
+/* ---------- Bảng xem dễ đọc ---------- */
+function buildView_(){
+  const k = {}, kt = {}, dv = {}, lc = {};
+  readT_('khoa').forEach(x => k[x.id] = x);
+  readT_('ky_thuat').forEach(x => kt[x.id] = x);
+  readT_('don_vi').forEach(x => dv[x.id] = x);
+  readT_('lua_chon').forEach(x => lc[x.id] = x);
+  const H = ['STT','Khoa/phòng đề xuất','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí','Ghi chú','Người khai','SĐT','Cập nhật'];
+  const rows = readT_('dang_ky').map(d => {
+    const kh = (k[d.khoa_id]||{}).ten || '?', me = TEN_BV + ' (' + kh + ')';
+    const o = lc[d.lua_chon_id] || {}, v = dv[d.don_vi_id] || {}, t = kt[d.ky_thuat_id] || {};
+    let pl, ten, a, b;
+    if(d.loai === 'nhan'){ pl = v.tuyen === 'TW' ? 'PL1' : 'PL2'; ten = t.ten; a = v.ten; b = me; }
+    else if(d.loai === 'cg'){ pl = 'PL3'; ten = d.ten_kt; a = me; b = d.don_vi_nhan; }
+    else { pl = 'PL4'; ten = 'Chuyên khoa: ' + d.chuyen_khoa; a = d.huong === 'nhan' ? d.don_vi_khac : me; b = d.huong === 'nhan' ? me : d.don_vi_khac; }
+    return [kh, pl, t.chuyen_nganh || '', ten || '', a || '', b || '', d.hinh_thuc || '', d.so_nguoi == null ? '' : d.so_nguoi, d.doi_tuong || '', d.thoi_gian || '',
+            [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', d.updated_at || ''];
+  }).sort((x,y) => (x[0]+x[1]).localeCompare(y[0]+y[1], 'vi')).map((r,i) => [i+1].concat(r));
+  let s = ss_().getSheetByName(VIEW);
+  if(!s){ s = ss_().insertSheet(VIEW, 0); }
+  s.clear();
+  s.getRange(1,1,1,H.length).setValues([H]).setFontWeight('bold').setBackground('#E8F0FA');
+  s.setFrozenRows(1);
+  if(rows.length) s.getRange(2,1,rows.length,H.length).setValues(rows);
+  s.getRange(1,1,Math.max(rows.length,1)+1,H.length).setWrap(true).setVerticalAlignment('top');
+}
+
+/* ---------- Web app ---------- */
+function json_(o){ return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+function doGet(e){
+  try{
+    const out = {};
+    Object.keys(TABLES).forEach(t => out[t] = readT_(t));
+    return json_({ok:true, data:out});
+  }catch(err){ return json_({ok:false, error:String(err.message||err)}); }
+}
+function doPost(e){
+  const lock = LockService.getScriptLock();
+  try{
+    lock.waitLock(20000);
+    const req = JSON.parse(e.postData.contents);
+    if(req.action === 'login'){ if(req.pw === ADMIN_PW) return json_({ok:true}); throw new Error('Sai mật khẩu'); }
+    if(!TABLES[req.table]) throw new Error('Bảng không hợp lệ');
+    check_(req);
+    const t = req.table;
+    switch(req.action){
+      case 'insert': insert_(t, [].concat(req.rows)); break;
+      case 'update': update_(t, req.id, req.patch || {}); break;
+      case 'updateWhere': updateWhere_(t, req.col, req.val, req.patch || {}); break;
+      case 'remove': remove_(t, req.id); break;
+      case 'clear': clear_(t); break;
+      default: throw new Error('Thao tác không hợp lệ');
+    }
+    SpreadsheetApp.flush();
+    if(['dang_ky','khoa','ky_thuat','don_vi','lua_chon'].indexOf(t) >= 0) buildView_();
+    return json_({ok:true});
+  }catch(err){
+    return json_({ok:false, error:String(err.message||err)});
+  }finally{ try{ lock.releaseLock(); }catch(x){} }
+}
+
+/* ---------- Chạy tay ---------- */
+function caiDat(){ Object.keys(TABLES).forEach(sh_); buildView_(); }
+function onOpen(){ SpreadsheetApp.getUi().createMenu('Khảo sát CGKT').addItem('Cập nhật tab "Xem tổng hợp"','buildView_').addToUi(); }
