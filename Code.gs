@@ -93,26 +93,34 @@ function isOpen_(){
   return !!c.mo && (!c.han_chot || new Date() <= new Date(c.han_chot));
 }
 
+// phu_luc: trống/null (dữ liệu cũ) = mở cả 4; 'none' = đóng hết; '1,3' = chỉ mở PL1, PL3
+function plOn_(n){
+  const c = readT_('cau_hinh')[0] || {}, v = c.phu_luc;
+  if(v == null || v === '') return true;
+  return String(v).split(',').map(x => x.trim()).indexOf(String(n)) >= 0;
+}
+
 /* ---------- Kiểm tra quyền ---------- */
 function check_(req){
   const admin = req.pw && req.pw === ADMIN_PW;
   if(admin) return true;
   const t = req.table, a = req.action;
   if(!isOpen_()) throw new Error('Đã khóa nhập liệu');
-  if(t === 'dang_ky' && a === 'insert'){
-    const c = readT_('cau_hinh')[0] || {}, on = (c.phu_luc == null || c.phu_luc === '') ? ['1','2','3','4'] : String(c.phu_luc).split(',');
-    const tuyen = {}; readT_('don_vi').forEach(d => tuyen[d.id] = d.tuyen);
-    [].concat(req.rows).forEach(r => { const pl = r.loai === 'cg' ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
-      if(pl && on.indexOf(pl) < 0) throw new Error('Phụ lục ' + pl + ' đang đóng'); });
-  }
   if(t === 'dang_ky'){
-    if(a === 'insert') return true;
+    const tuyen = {}; readT_('don_vi').forEach(d => tuyen[d.id] = d.tuyen);
+    const plOf = r => r.loai === 'cg' ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
+    const need = pl => { if(pl && !plOn_(pl)) throw new Error('Phụ lục ' + pl + ' đang đóng'); };
+    if(a === 'insert'){ [].concat(req.rows).forEach(r => need(plOf(r))); return true; }
     if(a === 'update' || a === 'remove'){
       const s = sh_(t), h = header_(s), rows = rowIndex_(s,'id',req.id);
       if(!rows.length) return true;
       const o = rowObj_(s,h,rows[0]);
       if(String(o.khoa_id) !== String(req.khoa_id)) throw new Error('Chỉ khoa/phòng đã đề xuất mới được sửa/xóa');
-      if(a === 'update' && req.patch && req.patch.khoa_id && String(req.patch.khoa_id) !== String(o.khoa_id)) throw new Error('Không được đổi khoa');
+      need(plOf(o));
+      if(a === 'update' && req.patch){
+        if(req.patch.khoa_id && String(req.patch.khoa_id) !== String(o.khoa_id)) throw new Error('Không được đổi khoa');
+        need(plOf(Object.assign({}, o, req.patch)));
+      }
       return true;
     }
   }
