@@ -245,6 +245,9 @@ const plOn = n => { const v=cfg().phu_luc; if(v==null||v==='') return true; retu
 const canEditPL = n => ADMIN || (isOpen() && plOn(n));
 const byId = (t,id) => S[t].find(r=>r.id===id);
 const curKhoa = () => $('#selKhoa').value;
+const allMode = () => ADMIN && !curKhoa(); // quản trị chưa chọn khoa → xem tất cả
+const ofKhoa = d => allMode() || d.khoa_id===curKhoa();
+const khoaOrder = d => { const k=byId('khoa',d.khoa_id); return k?(k.thu_tu||0):1e9; };
 
 let LOADED=false, SERVER_OLD=false;
 async function loadAll(force){
@@ -296,7 +299,7 @@ function renderHead(){
   sel.innerHTML='<option value="">— Chọn khoa/phòng —</option>'+S.khoa.map(k=>`<option value="${k.id}">${esc(k.ten)}</option>`).join('');
   sel.value = S.khoa.some(k=>k.id===cur)?cur:'';
   if(document.activeElement!==$('#inNguoi')&&document.activeElement!==$('#inSdt')) loadNguoi();
-  const mine=S.dang_ky.filter(d=>d.khoa_id===sel.value);
+  const mine=S.dang_ky.filter(d=>(ADMIN&&!sel.value)||d.khoa_id===sel.value);
   $('#nPhieu').textContent = mine.length; [1,2,3,4].forEach(p=>$('#n'+p).textContent=mine.filter(d=>plOf(d)===p).length);
 }
 function render(){ renderHead();
@@ -455,7 +458,7 @@ function dlgNhan({mode,kt,lc,edit,TY}){
 
 /* ================= TAB 2: PL3 ================= */
 function viewCG(){
-  const kid=curKhoa(), rows=S.dang_ky.filter(d=>d.khoa_id===kid&&d.loai==='cg');
+  const kid=curKhoa(), rows=S.dang_ky.filter(d=>ofKhoa(d)&&d.loai==='cg').sort((a,b)=>khoaOrder(a)-khoaOrder(b));
   $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 3 – Nhu cầu chuyển giao kỹ thuật cho tuyến dưới</b><div class="muted">Kỹ thuật khoa có thể chuyển giao cho các TTYT/bệnh viện tuyến dưới. Đơn vị chuyển giao: ${esc(CFG.TEN_BV)}.</div></div>
     <button class="btn pri" id="add">＋ Thêm kỹ thuật chuyển giao</button></div>
     ${tblRows(rows,'cg')}</div>`;
@@ -482,7 +485,7 @@ function dlgCG(edit){
 
 /* ================= TAB 3: PL4 ================= */
 function viewLP(){
-  const kid=curKhoa(), rows=S.dang_ky.filter(d=>d.khoa_id===kid&&d.loai==='lp');
+  const kid=curKhoa(), rows=S.dang_ky.filter(d=>ofKhoa(d)&&d.loai==='lp').sort((a,b)=>khoaOrder(a)-khoaOrder(b));
   $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 4 – Hỗ trợ cán bộ luân phiên năm 2027</b><div class="muted">Nhận cán bộ tuyến trên về hỗ trợ, hoặc cử cán bộ của khoa đi hỗ trợ tuyến dưới.</div></div>
     <button class="btn pri" id="add">＋ Thêm nhu cầu luân phiên</button></div>
     ${tblRows(rows,'lp')}</div>`;
@@ -538,10 +541,10 @@ function confirmDlg(msg,fn){ openDlg(`<h3>Xác nhận</h3><p>${esc(msg)}</p><div
   $('#cOK').onclick=async()=>{closeDlg();try{await fn()}catch(e){toast('Lỗi: '+e.message,4000)}} }
 function viewPhieu(){
   const kid=curKhoa();
-  if(!kid){$('#view').innerHTML='<div class="card empty">Chọn Khoa/Phòng để xem phiếu.</div>';return}
-  const rows=S.dang_ky.filter(d=>d.khoa_id===kid).sort((a,b)=>plOf(a)-plOf(b));
+  if(!kid && !ADMIN){$('#view').innerHTML='<div class="card empty">Chọn Khoa/Phòng để xem phiếu.</div>';return}
+  const rows=S.dang_ky.filter(ofKhoa).sort((a,b)=>plOf(a)-plOf(b)||khoaOrder(a)-khoaOrder(b));
   const last=rows.map(r=>r.updated_at||r.created_at).sort().pop();
-  $('#view').innerHTML=`<div class="card"><div style="text-align:center;margin-bottom:12px"><b style="font-size:16px;color:var(--navy)">PHIẾU ĐĂNG KÝ NHU CẦU CGKT & HỖ TRỢ CHUYÊN MÔN NĂM 2027</b><div>${esc(byId('khoa',kid).ten)} – ${esc(CFG.TEN_BV)}</div>
+  $('#view').innerHTML=`<div class="card"><div style="text-align:center;margin-bottom:12px"><b style="font-size:16px;color:var(--navy)">PHIẾU ĐĂNG KÝ NHU CẦU CGKT & HỖ TRỢ CHUYÊN MÔN NĂM 2027</b><div>${kid?esc(byId('khoa',kid).ten):'Tất cả khoa/phòng'} – ${esc(CFG.TEN_BV)}</div>
     <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div></div>${tblRows(rows,'all')}</div>`;
   bindRowBtns();
 }
