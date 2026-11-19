@@ -118,7 +118,7 @@ function buildView_(){
   readT_('ky_thuat').forEach(x => kt[x.id] = x);
   readT_('don_vi').forEach(x => dv[x.id] = x);
   readT_('lua_chon').forEach(x => lc[x.id] = x);
-  const H = ['STT','Khoa/phòng đề xuất','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí','Ghi chú','Người khai','SĐT','Cập nhật'];
+  const H = ['STT','Khoa/phòng đề xuất','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí','Ghi chú','Người đề xuất','SĐT','Cập nhật'];
   const rows = readT_('dang_ky').map(d => {
     const kh = (k[d.khoa_id]||{}).ten || '?', me = TEN_BV + ' (' + kh + ')';
     const o = lc[d.lua_chon_id] || {}, v = dv[d.don_vi_id] || {}, t = kt[d.ky_thuat_id] || {};

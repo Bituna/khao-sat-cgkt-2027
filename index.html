@@ -106,7 +106,7 @@ textarea{resize:vertical;min-height:60px}
   <div id="notice"></div>
   <div class="card who">
     <div><label>Khoa / Phòng *</label><select id="selKhoa"></select></div>
-    <div><label>Người khai</label><input type="text" id="inNguoi" placeholder="Chọn khoa/phòng trước" disabled></div>
+    <div><label>Người đề xuất</label><input type="text" id="inNguoi" placeholder="Chọn khoa/phòng trước" disabled></div>
     <div><label>Điện thoại</label><input type="text" id="inSdt" placeholder="Chọn khoa/phòng trước" disabled></div>
   </div>
 
@@ -588,7 +588,7 @@ function aTong(){
     <div class="kpi" style="background:var(--pink)"><b>${pend}</b><span>Đề xuất chờ duyệt</span></div></div>
     <div class="tools"><button class="btn gr" id="xSo">⬇ Xuất mẫu gửi Sở (4 phụ lục)</button><button class="btn pri" id="xCT">⬇ Xuất file tổng hợp toàn bộ</button><button class="btn" id="xBK">⬇ Sao lưu dữ liệu (JSON)</button>
       ${pend?'<span class="badge b-wait" style="align-self:center">Còn đề xuất chưa duyệt – vẫn được đưa vào file xuất</span>':''}</div>
-    <div class="row"><div><b>Tình trạng các khoa</b><div class="scroll" style="max-height:300px;margin-top:6px"><table class="tbl"><thead><tr><th>Khoa/Phòng</th><th>Số mục</th><th>Người khai</th><th>Cập nhật</th></tr></thead><tbody>
+    <div class="row"><div><b>Tình trạng các khoa</b><div class="scroll" style="max-height:300px;margin-top:6px"><table class="tbl"><thead><tr><th>Khoa/Phòng</th><th>Số mục</th><th>Người đề xuất</th><th>Cập nhật</th></tr></thead><tbody>
       ${S.khoa.map(k=>{const r=S.dang_ky.filter(d=>d.khoa_id===k.id);const l=r.map(x=>x.updated_at||x.created_at).sort().pop();return `<tr><td>${esc(k.ten)}</td><td>${r.length?`<span class="badge b-open">${r.length}</span>`:'<span class="badge b-close">chưa</span>'}</td><td>${esc(uniq(r.map(x=>x.nguoi_khai)).join(', '))}</td><td>${l?new Date(l).toLocaleString('vi-VN'):''}</td></tr>`}).join('')}
       </tbody></table></div></div>
       <div><b>PL1 – Nhận từ BV Trung ương (đã gộp)</b><div style="margin-top:6px">${gt(g1)}</div></div></div>
@@ -820,7 +820,7 @@ async function exportWB(full){
 }
 function sheetChiTiet(wb){
   const ws=wb.addWorksheet('Chi tiết theo khoa');
-  const H=['STT','Khoa/Phòng','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí tham khảo','Ghi chú','Người khai','SĐT','Trạng thái','Cập nhật'];
+  const H=['STT','Khoa/Phòng','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí tham khảo','Ghi chú','Người đề xuất','SĐT','Trạng thái','Cập nhật'];
   ws.addRow(H); ws.getRow(1).font={bold:true}; ws.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F0FA'}};
   [...S.dang_ky].sort((a,b)=>khoaTen(a.khoa_id).localeCompare(khoaTen(b.khoa_id),'vi')||plOf(a)-plOf(b)).forEach((d,i)=>{
     const k=byId('ky_thuat',d.ky_thuat_id),v=byId('don_vi',d.don_vi_id),o=byId('lua_chon',d.lua_chon_id),me=CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')';
@@ -836,7 +836,7 @@ function sheetTongQuan(wb){
   ws.mergeCells('A1:J1'); ws.getCell('A1').value='TỔNG HỢP NHU CẦU CHUYỂN GIAO KỸ THUẬT & HỖ TRỢ CHUYÊN MÔN NĂM 2027 – '+CFG.TEN_BV.toUpperCase();
   ws.getCell('A1').font={...F,size:14,bold:true}; ws.getCell('A1').alignment={horizontal:'center',wrapText:true}; ws.getRow(1).height=36;
   ws.mergeCells('A2:J2'); ws.getCell('A2').value='Số liệu xuất lúc '+new Date().toLocaleString('vi-VN')+(isOpen()?' (đang mở nhập liệu)':' (đã khóa nhập liệu)'); ws.getCell('A2').font={...F,italic:true}; ws.getCell('A2').alignment={horizontal:'center'};
-  const H=['STT','Khoa/Phòng','PL1 – Nhận từ TƯ','PL2 – Nhận từ tuyến TP','PL3 – CG tuyến dưới','PL4 – Luân phiên','Tổng số mục','Số người dự kiến cử/nhận','Người khai – SĐT','Cập nhật lần cuối'];
+  const H=['STT','Khoa/Phòng','PL1 – Nhận từ TƯ','PL2 – Nhận từ tuyến TP','PL3 – CG tuyến dưới','PL4 – Luân phiên','Tổng số mục','Số người dự kiến cử/nhận','Người đề xuất – SĐT','Cập nhật lần cuối'];
   const hr=ws.getRow(4); H.forEach((v,i)=>{const c=hr.getCell(i+1);c.value=v;c.font={...F,bold:true};c.border=BRD;c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F0FA'}}}); hr.height=34;
   let r=5; const tot=[0,0,0,0,0,0];
   S.khoa.forEach((k,i)=>{const ds=S.dang_ky.filter(d=>d.khoa_id===k.id); const c=[1,2,3,4].map(p=>ds.filter(d=>plOf(d)===p).length); const sl=ds.filter(d=>d.loai!=='cg').reduce((s,d)=>s+(+d.so_nguoi||0),0);
@@ -854,7 +854,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{TAB=t.dataset.t;rend
 $('#selKhoa').onchange=e=>{ls('cgkt_khoa',e.target.value);render()};
 function loadNguoi(){
   const k=curKhoa(), n=$('#inNguoi'), p=$('#inSdt');
-  n.disabled=p.disabled=!k; n.placeholder=k?'Họ tên người khai':'Chọn khoa/phòng trước'; p.placeholder=k?'SĐT liên hệ':'Chọn khoa/phòng trước';
+  n.disabled=p.disabled=!k; n.placeholder=k?'Họ tên người đề xuất':'Chọn khoa/phòng trước'; p.placeholder=k?'SĐT liên hệ':'Chọn khoa/phòng trước';
   if(!k){n.value=p.value='';return}
   const last=S.dang_ky.filter(d=>d.khoa_id===k&&(d.nguoi_khai||d.sdt)).sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')))[0]||{};
   n.value=ls('cgkt_nguoi_'+k)??last.nguoi_khai??''; p.value=ls('cgkt_sdt_'+k)??last.sdt??'';
