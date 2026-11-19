@@ -108,7 +108,7 @@ textarea{resize:vertical;min-height:60px}
   <div id="notice"></div>
   <div class="card who">
     <div><label>Khoa / Phòng *</label><select id="selKhoa"></select></div>
-    <div><label>Người đề xuất</label><input type="text" id="inNguoi" placeholder="Chọn khoa/phòng trước" disabled></div>
+    <div><label>Người đề xuất *</label><input type="text" id="inNguoi" placeholder="Chọn khoa/phòng trước" disabled></div>
     <div><label>Điện thoại</label><input type="text" id="inSdt" placeholder="Chọn khoa/phòng trước" disabled></div>
   </div>
 
@@ -258,7 +258,7 @@ function noneBlock(pl, hasRows){
     if($('#setNone')) $('#setNone').onclick=async()=>{ if(!needKhoa(pl)) return;
       await DB.insert('dang_ky',{id:uid(),khoa_id:kid,loai:'kc',huong:String(pl),ten_kt:NONE_TXT[pl],nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),created_at:nowIso(),updated_at:nowIso()});
       await loadAll(); render(); toast('Đã ghi nhận: khoa không có nhu cầu'); };
-    if($('#unNone')) $('#unNone').onclick=async()=>{ if(!needKhoa(pl)) return; await DB.remove('dang_ky',mine.id); await loadAll(); render(); toast('Đã bỏ xác nhận'); };
+    if($('#unNone')) $('#unNone').onclick=async()=>{ if(!needKhoa(pl,1)) return; await DB.remove('dang_ky',mine.id); await loadAll(); render(); toast('Đã bỏ xác nhận'); };
   };
   return {btn, note, mine, bind};
 }
@@ -333,7 +333,8 @@ function render(){ renderHead();
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
   ({tw:()=>viewNhan('TW'),tp:()=>viewNhan('TP'),cg:viewCG,lp:viewLP,dt:viewDT,phieu:viewPhieu})[TAB]();
 }
-function needKhoa(pl){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!canEdit()){toast('Đã khóa nhập liệu');return false} if(pl&&!canEditPL(pl)){toast('Phụ lục '+pl+' đang đóng');render();return false} return true }
+function needNguoi(){ if(!$('#inNguoi').value.trim()){toast('Vui lòng nhập Người đề xuất');$('#inNguoi').focus();return false} return true }
+function needKhoa(pl,boQuaNguoi){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!boQuaNguoi&&!needNguoi()) return false; if(!canEdit()){toast('Đã khóa nhập liệu');return false} if(pl&&!canEditPL(pl)){toast('Phụ lục '+pl+' đang đóng');render();return false} return true }
 
 /* ================= TAB 1: DANH MỤC ================= */
 function ktOffers(ktId){ return S.lua_chon.filter(l=>l.ky_thuat_id===ktId) }
@@ -451,7 +452,7 @@ function dlgNhan({mode,kt,lc,edit,TY}){
       document.querySelectorAll('#fSugg [data-k]').forEach(e=>e.onclick=()=>{const k=byId('ky_thuat',e.dataset.k);const o=ktOffers(k.id).filter(x=>byId('don_vi',x.don_vi_id)?.tuyen===TY);o.length?dlgNhan({mode:'pick',kt:k,lc:o[0],TY}):dlgNhan({mode:'otherdv',kt:k,TY})});
     };
   }
-  $('#fOK').onclick=async()=>{
+  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
     try{
       const base={hinh_thuc:$('#fHT').value,so_nguoi:+$('#fSL').value||0,thoi_gian:$('#fTG').value,doi_tuong:$('#fDT').value.trim(),ghi_chu:$('#fGC').value.trim(),
         nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
@@ -501,7 +502,7 @@ function dlgCG(edit){
     <div class="fld"><label>Hình thức</label><select id="fHT">${optHT(d.hinh_thuc||HINH_THUC[0])}</select></div></div>
     <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến tham gia, ...">${esc(d.ghi_chu||'')}</textarea></div>
     <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">Lưu</button></div>`);
-  $('#fOK').onclick=async()=>{
+  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
     const ten=$('#fTen').value.trim(),nhan=$('#fNhan').value.trim(); if(!ten||!nhan) return toast('Nhập tên kỹ thuật và đơn vị nhận');
     const row={loai:'cg',ten_kt:ten,don_vi_nhan:nhan,thoi_gian:$('#fTG').value,hinh_thuc:$('#fHT').value,ghi_chu:$('#fGC').value.trim(),nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
     try{ if(edit) await DB.update('dang_ky',edit.id,row); else { await clearNone(3); await DB.insert('dang_ky',{id:uid(),khoa_id:curKhoa(),created_at:nowIso(),...row}); }
@@ -530,7 +531,7 @@ function dlgLP(edit){
     <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến tham gia, ...">${esc(d.ghi_chu||'')}</textarea></div>
     <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">Lưu</button></div>`);
   const upd=()=>$('#lbDV').textContent=$('#fHuong').value==='nhan'?'Đơn vị hỗ trợ (cử cán bộ về) *':'Đơn vị nhận hỗ trợ *'; upd(); $('#fHuong').onchange=upd;
-  $('#fOK').onclick=async()=>{
+  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
     const dv=$('#fDV').value.trim(),ck=$('#fCK').value.trim(); if(!dv||!ck) return toast('Nhập đơn vị và chuyên khoa');
     const row={loai:'lp',huong:$('#fHuong').value,don_vi_khac:dv,chuyen_khoa:ck,so_nguoi:+$('#fSL').value||0,thoi_gian:$('#fTG').value,doi_tuong:$('#fDT').value.trim(),ghi_chu:$('#fGC').value.trim(),nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
     try{ if(edit) await DB.update('dang_ky',edit.id,row); else await DB.insert('dang_ky',{id:uid(),khoa_id:curKhoa(),created_at:nowIso(),...row});
@@ -589,7 +590,7 @@ function dlgDT(edit){
   fillLoai(); $('#fNhom').onchange=()=>{d.loai_dt='';fillLoai()};
   $('#fLoai').onchange=()=>{$('#fLoaiKhac').style.display=$('#fLoai').value==='khac'?'block':'none'};
   $('#fKP').onchange=()=>{$('#fKPKhac').style.display=$('#fKP').value==='khac'?'block':'none'; if($('#fKP').value==='khac') $('#fKPKhac').focus()};
-  $('#fOK').onclick=async()=>{
+  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
     const loai=$('#fLoai').value==='khac'?$('#fLoaiKhac').value.trim():$('#fLoai').value;
     const kp=$('#fKP').value==='khac'?$('#fKPKhac').value.trim():'NQ10';
     const ck=$('#fCK').value.trim();
