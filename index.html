@@ -538,7 +538,7 @@ function dlgLP(edit){
 
 /* ================= PL5: ĐÀO TẠO VĂN BẰNG, CHỨNG CHỈ ================= */
 const DT_LOAI = {
-  'Văn bằng':['Tiến sĩ','Thạc sĩ','Bác sĩ chuyên khoa II','Bác sĩ chuyên khoa I','Bác sĩ nội trú','Đại học liên thông (ĐD, KTV, HS)','Đại học văn bằng 2'],
+  'Văn bằng':['Tiến sĩ','Thạc sĩ','Bác sĩ chuyên khoa II','Bác sĩ chuyên khoa I','Đại học liên thông (ĐD, KTV, HS)'],
   'Chứng chỉ':['Định hướng chuyên khoa 3 tháng','Định hướng chuyên khoa 6 tháng','Định hướng chuyên khoa 9 tháng','Định hướng chuyên khoa 12 tháng','Chứng chỉ chuyên môn ngắn hạn','Đào tạo liên tục (CME)','Quản lý bệnh viện','Quản lý điều dưỡng']
 };
 const DT_CHUC_DANH = ['Bác sĩ','BSCK I','BSCK II','Thạc sĩ','Tiến sĩ','Bác sĩ nội trú','Dược sĩ','Điều dưỡng','Kỹ thuật viên','Hộ sinh','Cử nhân','Khác'];
@@ -548,7 +548,7 @@ const optL = (arr,v) => arr.map(t=>`<option ${t===v?'selected':''}>${esc(t)}</op
 function viewDT(){
   const kid=curKhoa(), rows=S.dang_ky.filter(d=>ofKhoa(d)&&d.loai==='dt').sort((a,b)=>khoaOrder(a)-khoaOrder(b)||String(a.nhom_dt).localeCompare(String(b.nhom_dt),'vi'));
   const nb=noneBlock(5, kid && rows.length);
-  $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 5 – Đào tạo văn bằng, chứng chỉ năm 2027</b><div class="muted">Nhu cầu cử cán bộ đi học văn bằng (ThS, TS, CKI, CKII, BSNT, liên thông…) và chứng chỉ (định hướng chuyên khoa, chứng chỉ chuyên môn, CME…).</div></div>
+  $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 5 – Đào tạo văn bằng, chứng chỉ năm 2027</b><div class="muted">Nhu cầu cử cán bộ đi học văn bằng (ThS, TS, CKI, CKII, liên thông…) và chứng chỉ (định hướng chuyên khoa, chứng chỉ chuyên môn, CME…).</div></div>
     ${nb.btn}<button class="btn pri" id="add">＋ Thêm nhu cầu đào tạo</button></div>
     ${nb.note}${nb.mine && !rows.length?'':tblRows(rows,'dt')}</div>`;
   $('#add').onclick=()=>needKhoa(5)&&dlgDT();
