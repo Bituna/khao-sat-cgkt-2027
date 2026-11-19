@@ -97,7 +97,7 @@ textarea{resize:vertical;min-height:60px}
   <div class="ttl"><b>Khảo sát nhu cầu chuyển giao kỹ thuật & hỗ trợ chuyên môn năm 2027</b><span>Bệnh viện Phổi Hải Phòng · theo CV 13256/SYT-NVY ngày 17/11/2026</span></div>
   <div class="sp"></div>
   <span id="stBadge" class="badge"></span>
-  <span id="modeBadge"></span>
+  <span id="modeBadge"></span><span id="syncBadge" class="badge" style="display:none"></span>
   <button class="btn" id="btnAdmin">🔒 Quản trị</button>
 </div></header>
 
@@ -157,7 +157,6 @@ function toast(m,ms=2200){const t=$('#toast');t.textContent=m;t.style.display='b
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 
 /* ================= LỚP DỮ LIỆU ================= */
-let BUSYN=0; function busy(d){BUSYN+=d; const t=$('#toast'); if(BUSYN>0){t.textContent='⏳ Đang lưu lên Google Sheet…';t.style.display='block';document.body.style.pointerEvents='none';document.body.style.cursor='wait'} else {t.style.display='none';document.body.style.pointerEvents='';document.body.style.cursor=''}}
 const isDemo = !CFG.GSHEET_URL;
 const LocalDB = {
   key:'cgkt2027_demo',
@@ -173,24 +172,38 @@ const LocalDB = {
   async login(email,pw){if(pw===CFG.DEMO_ADMIN_PASSWORD){sessionStorage.setItem('cgkt_admin','1');return true}throw new Error('Sai mật khẩu')},
   async logout(){sessionStorage.removeItem('cgkt_admin')}
 };
+/* Google Sheet: ghi lạc quan – cập nhật ngay trên web, gửi lên Sheet chạy ngầm theo hàng đợi */
+let SYNC_Q=Promise.resolve(), SYNC_N=0, SYNC_ERR=false;
+function syncBadge(){ const b=$('#syncBadge'); if(!b) return;
+  b.className='badge '+(SYNC_N?'b-wait':SYNC_ERR?'b-close':'b-open');
+  b.textContent = SYNC_N ? `⏳ Đang đồng bộ (${SYNC_N})…` : SYNC_ERR ? '⚠ Lỗi đồng bộ' : '✓ Đã lưu'; b.style.display=isDemo?'none':''; }
+const applyLocal = {
+  insert(t,rows){ S[t]=S[t].concat(rows.map(r=>({...r}))) },
+  update(t,id,patch){ S[t].forEach(r=>{ if(String(r.id)===String(id)) Object.assign(r,patch) }) },
+  updateWhere(t,col,val,patch){ S[t].forEach(r=>{ if(r[col]===val) Object.assign(r,patch) }) },
+  remove(t,id){ S[t]=S[t].filter(r=>String(r.id)!==String(id)) },
+  clear(t){ S[t]=[] }
+};
 const GSDB = {
-  async _post(req){
-    busy(1);
-    try{ return await this.__post(req) } finally { busy(-1) }
-  },
-  async __post(req){
-    const pw=sessionStorage.getItem('cgkt_pw'); if(pw) req.pw=pw;
-    req.khoa_id = req.khoa_id || curKhoa();
+  async _send(req){
     let r; try{ r=await fetch(CFG.GSHEET_URL,{method:'POST',body:JSON.stringify(req)}) }catch(e){ throw new Error('Không kết nối được Google Sheet') }
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'Lỗi máy chủ'); return j;
   },
+  _enqueue(req){
+    const pw=sessionStorage.getItem('cgkt_pw'); if(pw) req.pw=pw;
+    req.khoa_id = req.khoa_id || curKhoa();
+    SYNC_N++; syncBadge();
+    const done=async()=>{ SYNC_N--; syncBadge();
+      if(!SYNC_N && SYNC_ERR){ try{ await loadAll(true); SYNC_ERR=false; syncBadge(); render(); if(INADMIN) adminView(); }catch(x){} } };
+    SYNC_Q = SYNC_Q.then(()=>this._send(req)).then(done, e=>{ SYNC_ERR=true; toast('Không lưu được: '+e.message+' – web sẽ tải lại dữ liệu từ Google Sheet',5000); return done(); });
+  },
   async allTables(){ const r=await fetch(CFG.GSHEET_URL+(CFG.GSHEET_URL.includes('?')?'&':'?')+'t='+Date.now()); const j=await r.json(); if(!j.ok) throw new Error(j.error); return j.data },
   async all(t){ return (await this.allTables())[t]||[] },
-  async insert(t,rows){ rows=[].concat(rows); for(let i=0;i<rows.length;i+=300) await this._post({action:'insert',table:t,rows:rows.slice(i,i+300)}); return rows },
-  async update(t,id,patch){ await this._post({action:'update',table:t,id,patch}) },
-  async updateWhere(t,col,val,patch){ await this._post({action:'updateWhere',table:t,col,val,patch}) },
-  async remove(t,id){ await this._post({action:'remove',table:t,id}) },
-  async clear(t){ await this._post({action:'clear',table:t}) },
+  async insert(t,rows){ rows=[].concat(rows); applyLocal.insert(t,rows); for(let i=0;i<rows.length;i+=300) this._enqueue({action:'insert',table:t,rows:rows.slice(i,i+300)}); return rows },
+  async update(t,id,patch){ applyLocal.update(t,id,patch); this._enqueue({action:'update',table:t,id,patch}) },
+  async updateWhere(t,col,val,patch){ applyLocal.updateWhere(t,col,val,patch); this._enqueue({action:'updateWhere',table:t,col,val,patch}) },
+  async remove(t,id){ applyLocal.remove(t,id); this._enqueue({action:'remove',table:t,id}) },
+  async clear(t){ applyLocal.clear(t); this._enqueue({action:'clear',table:t}) },
   async isAdmin(){ return !!sessionStorage.getItem('cgkt_pw') },
   async login(email,pw){ const r=await fetch(CFG.GSHEET_URL,{method:'POST',body:JSON.stringify({action:'login',pw})}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'Sai mật khẩu'); sessionStorage.setItem('cgkt_pw',pw); return true },
   async logout(){ sessionStorage.removeItem('cgkt_pw') }
@@ -206,7 +219,11 @@ const canEdit = () => ADMIN || isOpen();
 const byId = (t,id) => S[t].find(r=>r.id===id);
 const curKhoa = () => $('#selKhoa').value;
 
-async function loadAll(){
+let LOADED=false;
+async function loadAll(force){
+  if(DB===GSDB && LOADED && !force){ S.khoa.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0)); return; }  // đã cập nhật tại chỗ
+  if(DB===GSDB && force && SYNC_N) await SYNC_Q;
+  LOADED=true;
   if(DB.allTables){ const d=await DB.allTables(); TABLES.forEach(t=>S[t]=d[t]||[]); }
   else { const res = await Promise.all(TABLES.map(t=>DB.all(t))); TABLES.forEach((t,i)=>S[t]=res[i]); }
   S.khoa.sort((a,b)=>(a.thu_tu||0)-(b.thu_tu||0));
@@ -517,7 +534,7 @@ function adminView(){
   INADMIN=true; DLG_IS_ADMIN=true;
   document.querySelectorAll('.atab').forEach(e=>e.onclick=()=>{ATAB=e.dataset.a;adminView()});
   $('#aOut').onclick=async()=>{await DB.logout();ADMIN=false;closeDlg(true);render()};
-  $('#aRef').onclick=async()=>{await loadAll();render();adminView()};
+  $('#aRef').onclick=async()=>{await loadAll(true);render();adminView()};
   ({tong:aTong,duyet:aDuyet,dm:aDM,dv:aDV,khoa:aKhoa,ch:aCH})[ATAB]();
 }
 function groupNhan(pl){
@@ -813,6 +830,8 @@ $('#inNguoi').oninput=e=>ls('cgkt_nguoi',e.target.value); $('#inSdt').oninput=e=
 $('#btnAdmin').onclick=openAdmin;
 $('#btnPrint').onclick=()=>{TAB='phieu';render();setTimeout(()=>window.print(),200)};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDlg()});
+window.addEventListener('beforeunload',e=>{ if(SYNC_N){ e.preventDefault(); e.returnValue=''; } });
+document.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible' && DB===GSDB && LOADED && !SYNC_N && !$('#ovl').classList.contains('on')){ try{ await loadAll(true); render(); }catch(e){} } });
 (async function init(){
   $('#inNguoi').value=ls('cgkt_nguoi')||''; $('#inSdt').value=ls('cgkt_sdt')||'';
   try{
