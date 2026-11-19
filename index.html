@@ -259,6 +259,7 @@ function noneBlock(pl, hasRows){
   };
   return {btn, note, mine, bind};
 }
+function lockIfNone(nb, sel){ if(!nb.mine) return; document.querySelectorAll(sel).forEach(b=>{ b.disabled=true; b.title='Khoa đã xác nhận không có nhu cầu – bấm “Bỏ xác nhận” để đăng ký'; b.style.opacity=.45; b.style.cursor='not-allowed'; }); }
 async function clearNone(pl){ for(const z of S.dang_ky.filter(x=>isNone(x)&&x.khoa_id===curKhoa()&&+x.huong===pl)) await DB.remove('dang_ky',z.id); }
 const plOn = n => { const v=cfg().phu_luc; if(v==null||v==='') return true; return String(v).split(',').map(x=>x.trim()).includes(String(n)); };
 const canEditPL = n => ADMIN || (isOpen() && plOn(n));
@@ -391,7 +392,7 @@ function viewNhan(TY){
   $('#fdv').onchange=e=>{FILTER.dv=e.target.value;re()};
   $('#fmine').onchange=e=>{FILTER.chiDaChon=e.target.checked;re()};
   $('#btnNew').onclick=()=>needKhoa(TY==='TW'?1:2)&&dlgNhan({mode:'new',TY});
-  nb.bind();
+  nb.bind(); lockIfNone(nb,'#btnNew,[data-pick],[data-otherdv]');
   document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{if(!needKhoa(TY==='TW'?1:2))return;const o=byId('lua_chon',b.dataset.pick);dlgNhan({mode:'pick',kt:byId('ky_thuat',o.ky_thuat_id),lc:o,TY})});
   document.querySelectorAll('[data-otherdv]').forEach(b=>b.onclick=()=>needKhoa(TY==='TW'?1:2)&&dlgNhan({mode:'otherdv',kt:byId('ky_thuat',b.dataset.otherdv),TY}));
 }
@@ -485,7 +486,7 @@ function viewCG(){
     ${nb.btn}<button class="btn pri" id="add">＋ Thêm kỹ thuật chuyển giao</button></div>
     ${nb.note}${nb.mine && !rows.length?'':tblRows(rows,'cg')}</div>`;
   $('#add').onclick=()=>needKhoa(3)&&dlgCG();
-  nb.bind(); bindRowBtns();
+  nb.bind(); lockIfNone(nb,'#add'); bindRowBtns();
 }
 function dlgCG(edit){
   const d=edit||{};
