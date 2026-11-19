@@ -606,14 +606,17 @@ function dlgDT(edit){
 const dtTen = d => (d.loai_dt||'')+(d.chuyen_khoa?' – '+d.chuyen_khoa:'');
 const dtNguoiList = d => { const t=String(d.ho_ten||'').split(';').map(x=>x.trim()), c=String(d.chuc_danh||'').split(';').map(x=>x.trim()); return t.map((x,i)=>x?x+(c[i]?' ('+c[i]+')':''):'').filter(Boolean); };
 const dtNguoi = d => dtNguoiList(d).join('; ');
+const dtNguoiIdx = d => { const t=String(d.ho_ten||'').split(';').map(x=>x.trim()), c=String(d.chuc_danh||'').split(';').map(x=>x.trim()); return t.map((x,i)=>({i,p:x?x+(c[i]?' ('+c[i]+')':''):''})).filter(x=>x.p); };
+// PL5: mỗi người 1 dòng (cùng nội dung) – dùng cho bảng web và file xuất
+const tachNguoi = list => list.flatMap(d => { const ds = d.loai==='dt' ? dtNguoiIdx(d) : []; return ds.length>1 ? ds.map(x=>({d,p:x.p,pi:x.i})) : [{d,p:ds[0]?.p}]; });
 
 /* ================= PHIẾU ================= */
 function plOf(d){ if(isNone(d))return +d.huong||1; if(d.loai==='dt')return 5; if(d.loai==='cg')return 3; if(d.loai==='lp')return 4; const v=byId('don_vi',d.don_vi_id); return v&&v.tuyen==='TW'?1:2 }
-function rowDesc(d){
+function rowDesc(d,p){
   if(d.loai==='nhan'){const k=byId('ky_thuat',d.ky_thuat_id)||{},v=byId('don_vi',d.don_vi_id)||{},o=byId('lua_chon',d.lua_chon_id)||{};
     return {ten:k.ten||'(đã xóa)',cn:k.chuyen_nganh||'',dv:v.ten||'',chiTiet:[o.thoi_gian,o.goi,o.hoc_phi].filter(Boolean).join(' · '),cho:(!k.duyet||!v.duyet)}}
   if(isNone(d)) return {ten:NONE_TXT[+d.huong]||'Không có nhu cầu',dv:'',chiTiet:''};
-  if(d.loai==='dt') return {ten:dtTen(d),dv:d.co_so_dt||'',chiTiet:[d.nhom_dt,'Người học: '+dtNguoi(d),d.so_thang?d.so_thang+' tháng':'','Kinh phí: '+(d.kinh_phi||'')].filter(Boolean).join(' · ')};
+  if(d.loai==='dt') return {ten:dtTen(d),dv:d.co_so_dt||'',chiTiet:[d.nhom_dt,'Người học: '+(p??dtNguoi(d)),d.so_thang?d.so_thang+' tháng':'','Kinh phí: '+(d.kinh_phi||'')].filter(Boolean).join(' · ')};
   if(d.loai==='cg') return {ten:d.ten_kt,dv:CFG.TEN_BV+' → '+d.don_vi_nhan,chiTiet:''};
   return {ten:'Chuyên khoa: '+d.chuyen_khoa,dv:(d.huong==='nhan'?d.don_vi_khac+' → '+CFG.TEN_BV:CFG.TEN_BV+' → '+d.don_vi_khac),chiTiet:''};
 }
@@ -621,10 +624,10 @@ function tblRows(rows,loai,showKhoa){
   if(!rows.length) return `<div class="empty">Chưa có mục nào.</div>`;
   const plName={1:'PL1',2:'PL2',3:'PL3',4:'PL4',5:'PL5'};
   return `<div style="overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>Khoa/phòng đề xuất</th><th>PL</th><th>Kỹ thuật / nội dung</th><th>Đơn vị</th><th>Hình thức</th><th>SL</th><th>Đối tượng</th><th>Thời gian</th><th>Ghi chú</th><th class="noprint"></th></tr></thead><tbody>
-  ${rows.map((d,i)=>{const r=rowDesc(d);return `<tr><td>${i+1}</td><td><b>${esc(byId('khoa',d.khoa_id)?.ten||'?')}</b>${d.nguoi_khai||d.sdt?`<div class="muted">${esc([d.nguoi_khai,d.sdt].filter(Boolean).join(' – '))}</div>`:''}</td><td><span class="badge b-blue">${plName[plOf(d)]}</span></td>
+  ${tachNguoi(rows).map(({d,p,pi},i)=>{const r=rowDesc(d,p);return `<tr><td>${i+1}</td><td><b>${esc(byId('khoa',d.khoa_id)?.ten||'?')}</b>${d.nguoi_khai||d.sdt?`<div class="muted">${esc([d.nguoi_khai,d.sdt].filter(Boolean).join(' – '))}</div>`:''}</td><td><span class="badge b-blue">${plName[plOf(d)]}</span></td>
     <td><b>${esc(r.ten)}</b>${r.cho?' <span class="badge b-wait">chờ duyệt</span>':''}${r.chiTiet?`<div class="muted">${esc(r.chiTiet)}</div>`:''}</td><td>${esc(r.dv)}</td>
-    <td>${esc(d.hinh_thuc||'')}</td><td>${d.so_nguoi??''}</td><td>${esc(d.doi_tuong||'')}</td><td>${esc(d.thoi_gian||'')}</td><td>${esc(d.ghi_chu||'')}</td>
-    <td class="noprint" style="white-space:nowrap">${canEditPL(plOf(d))&&(ADMIN||d.khoa_id===curKhoa())?`${isNone(d)?'':`<button class="btn sm" data-ed="${d.id}">Sửa</button>`} <button class="btn sm dan" data-del="${d.id}">Xóa</button>`:''}</td></tr>`}).join('')}
+    <td>${esc(d.hinh_thuc||'')}</td><td>${pi!=null?1:(d.so_nguoi??'')}</td><td>${esc(d.doi_tuong||'')}</td><td>${esc(d.thoi_gian||'')}</td><td>${esc(d.ghi_chu||'')}</td>
+    <td class="noprint" style="white-space:nowrap">${canEditPL(plOf(d))&&(ADMIN||d.khoa_id===curKhoa())?`${isNone(d)?'':`<button class="btn sm" data-ed="${d.id}">Sửa</button>`} <button class="btn sm dan" data-del="${d.id}"${pi!=null?` data-pi="${pi}"`:''}>Xóa</button>`:''}</td></tr>`}).join('')}
   </tbody></table></div>`;
 }
 function bindRowBtns(root=document){
@@ -632,7 +635,8 @@ function bindRowBtns(root=document){
   root.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{const d=byId('dang_ky',b.dataset.ed); if(!own(d))return toast('Chỉ khoa/phòng đã đề xuất mới được sửa'); if(!canEditPL(plOf(d))){render();return toast('Phụ lục '+plOf(d)+' đang đóng')}
     if(d.loai==='nhan'){const kt=byId('ky_thuat',d.ky_thuat_id);dlgNhan({mode:'pick',kt,lc:byId('lua_chon',d.lua_chon_id),edit:d})}
     else if(d.loai==='cg') dlgCG(d); else if(d.loai==='dt') dlgDT(d); else dlgLP(d);});
-  root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>!own(byId('dang_ky',b.dataset.del))?toast('Chỉ khoa/phòng đã đề xuất mới được xóa'):confirmDlg('Xóa mục này khỏi phiếu?',async()=>{await DB.remove('dang_ky',b.dataset.del);await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}));
+  root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>!own(byId('dang_ky',b.dataset.del))?toast('Chỉ khoa/phòng đã đề xuất mới được xóa'):b.dataset.pi!=null?confirmDlg('Xóa người này khỏi đăng ký đào tạo?',async()=>{const d=byId('dang_ky',b.dataset.del),pi=+b.dataset.pi,t=String(d.ho_ten||'').split(';').map(x=>x.trim()),c=String(d.chuc_danh||'').split(';').map(x=>x.trim()),keep=t.map((x,i)=>i).filter(i=>i!==pi&&t[i]);
+    await DB.update('dang_ky',d.id,{ho_ten:keep.map(i=>t[i]).join('; '),chuc_danh:keep.map(i=>c[i]||'').join('; '),so_nguoi:keep.length,updated_at:nowIso()});await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}):confirmDlg('Xóa mục này khỏi phiếu?',async()=>{await DB.remove('dang_ky',b.dataset.del);await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}));
 }
 function confirmDlg(msg,fn){ openDlg(`<h3>Xác nhận</h3><p>${esc(msg)}</p><div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="cOK">Đồng ý</button></div>`);
   $('#cOK').onclick=async()=>{closeDlg();try{await fn()}catch(e){toast('Lỗi: '+e.message,4000)}} }
@@ -943,7 +947,7 @@ function sheetDT(wb){
   Object.keys(DT_LOAI).forEach(nhom=>{
     const ds=S.dang_ky.filter(d=>d.loai==='dt'&&(d.nhom_dt||'Văn bằng')===nhom).sort((a,b)=>String(a.loai_dt).localeCompare(String(b.loai_dt),'vi')||khoaOrder(a)-khoaOrder(b));
     if(!ds.length) return; rows.push({section:nhom.toUpperCase()+' ('+ds.reduce((s,d)=>s+(+d.so_nguoi||0),0)+' người)'});
-    ds.forEach(d=>rows.push([++i,khoaTen(d.khoa_id),d.loai_dt||'',d.chuyen_khoa||'',dtNguoiList(d).join('\n'),d.so_nguoi??'',d.co_so_dt||'',d.thoi_gian||'',d.so_thang||'',d.hinh_thuc||'',d.kinh_phi||'',d.ghi_chu||'']));
+    tachNguoi(ds).forEach(({d,p,pi})=>rows.push([++i,khoaTen(d.khoa_id),d.loai_dt||'',d.chuyen_khoa||'',p||'',pi!=null?1:(d.so_nguoi??''),d.co_so_dt||'',d.thoi_gian||'',d.so_thang||'',d.hinh_thuc||'',d.kinh_phi||'',d.ghi_chu||'']));
   });
   const ks=S.dang_ky.filter(d=>isNone(d)&&+d.huong===5).sort((a,b)=>khoaOrder(a)-khoaOrder(b));
   if(ks.length){ rows.push({section:'Khoa/phòng không có nhu cầu'}); ks.forEach(d=>rows.push([++i,khoaTen(d.khoa_id),NONE_TXT[5],'','','','','','','','',d.ghi_chu||''])); }
@@ -960,10 +964,10 @@ function sheetChiTiet(wb){
   const ws=wb.addWorksheet('Chi tiết theo khoa');
   const H=['STT','Khoa/Phòng','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí tham khảo','Ghi chú','Người đề xuất','SĐT','Trạng thái','Cập nhật'];
   ws.addRow(H); ws.getRow(1).font={bold:true}; ws.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F0FA'}};
-  [...S.dang_ky].sort((a,b)=>khoaTen(a.khoa_id).localeCompare(khoaTen(b.khoa_id),'vi')||plOf(a)-plOf(b)).forEach((d,i)=>{
+  tachNguoi([...S.dang_ky].sort((a,b)=>khoaTen(a.khoa_id).localeCompare(khoaTen(b.khoa_id),'vi')||plOf(a)-plOf(b))).forEach(({d,p,pi},i)=>{
     const k=byId('ky_thuat',d.ky_thuat_id),v=byId('don_vi',d.don_vi_id),o=byId('lua_chon',d.lua_chon_id),me=CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')';
-    const [ten,dv,nhan]= d.loai==='nhan'?[k?.ten,v?.ten,me]: d.loai==='cg'?[d.ten_kt,me,d.don_vi_nhan]:d.loai==='dt'?[dtTen(d)+(dtNguoi(d)?' ('+dtNguoi(d)+')':''),d.co_so_dt||'',me]:isNone(d)?[NONE_TXT[+d.huong]||'Không có nhu cầu','',me]:['Chuyên khoa: '+d.chuyen_khoa,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac];
-    ws.addRow([i+1,khoaTen(d.khoa_id),'PL'+plOf(d),k?.chuyen_nganh||'',ten,dv,nhan,d.hinh_thuc||'',d.so_nguoi??'',d.doi_tuong||'',d.thoi_gian||'',o?[o.goi,o.thoi_gian].filter(Boolean).join(', '):'',o?.hoc_phi||'',d.ghi_chu||'',d.nguoi_khai||'',d.sdt||'',(k&&!k.duyet)||(v&&!v.duyet)?'Chờ duyệt':'',d.updated_at?new Date(d.updated_at).toLocaleString('vi-VN'):'']);
+    const [ten,dv,nhan]= d.loai==='nhan'?[k?.ten,v?.ten,me]: d.loai==='cg'?[d.ten_kt,me,d.don_vi_nhan]:d.loai==='dt'?[dtTen(d)+((p??dtNguoi(d))?' ('+(p??dtNguoi(d))+')':''),d.co_so_dt||'',me]:isNone(d)?[NONE_TXT[+d.huong]||'Không có nhu cầu','',me]:['Chuyên khoa: '+d.chuyen_khoa,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac];
+    ws.addRow([i+1,khoaTen(d.khoa_id),'PL'+plOf(d),k?.chuyen_nganh||'',ten,dv,nhan,d.hinh_thuc||'',pi!=null?1:(d.so_nguoi??''),d.doi_tuong||'',d.thoi_gian||'',o?[o.goi,o.thoi_gian].filter(Boolean).join(', '):'',o?.hoc_phi||'',d.ghi_chu||'',d.nguoi_khai||'',d.sdt||'',(k&&!k.duyet)||(v&&!v.duyet)?'Chờ duyệt':'',d.updated_at?new Date(d.updated_at).toLocaleString('vi-VN'):'']);
   });
   [6,24,8,24,44,28,28,22,8,24,16,18,16,30,18,12,10,18].forEach((w,i)=>ws.getColumn(i+1).width=w);
   ws.eachRow(r=>r.alignment={vertical:'top',wrapText:true}); ws.views=[{state:'frozen',ySplit:1}]; ws.autoFilter={from:'A1',to:{row:1,column:H.length}};
