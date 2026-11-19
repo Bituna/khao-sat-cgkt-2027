@@ -38,20 +38,27 @@ function sh_(t){
     s.getRange(1,1,1,h.length).setValues([h]).setFontWeight('bold').setBackground('#E8F0FA');
     s.setFrozenRows(1);
     s.getRange(1,1,s.getMaxRows(),h.length).setNumberFormat('@');
-  } else if(TABLES[t]){ // bổ sung cột mới nếu sheet cũ còn thiếu
-    const cur = s.getRange(1,1,1,Math.max(s.getLastColumn(),1)).getValues()[0].map(String);
-    TABLES[t].filter(k => cur.indexOf(k) < 0).forEach(k => { const c = s.getLastColumn()+1; s.getRange(1,c).setValue(k).setFontWeight('bold').setBackground('#E8F0FA'); s.getRange(1,c,s.getMaxRows(),1).setNumberFormat('@'); });
   }
   return s;
 }
+function ensureCols_(t){ // bổ sung cột mới nếu sheet cũ còn thiếu (chỉ chạy khi ghi / cài đặt)
+  const s = sh_(t);
+  if(!TABLES[t]) return s;
+  const cur = s.getRange(1,1,1,Math.max(s.getLastColumn(),1)).getValues()[0].map(String);
+  TABLES[t].filter(k => cur.indexOf(k) < 0).forEach(k => { const c = s.getLastColumn()+1; s.getRange(1,c).setValue(k).setFontWeight('bold').setBackground('#E8F0FA'); s.getRange(1,c,s.getMaxRows(),1).setNumberFormat('@'); });
+  return s;
+}
 function header_(s){ return s.getRange(1,1,1,s.getLastColumn()).getValues()[0].map(String); }
-function readT_(t){
-  const s = sh_(t), last = s.getLastRow();
-  if(last < 2) return [];
-  const h = header_(s), v = s.getRange(2,1,last-1,h.length).getValues();
-  return v.filter(r => String(r[0]) !== '').map(r => {
+let MEMO_ = {};
+function readT_(t){ // đọc cả bảng bằng 1 lệnh, nhớ tạm trong 1 lượt chạy
+  if(MEMO_[t]) return MEMO_[t];
+  const all = sh_(t).getDataRange().getValues();
+  if(all.length < 2) return (MEMO_[t] = []);
+  const h = all[0].map(String);
+  return (MEMO_[t] = all.slice(1).filter(r => String(r[0]) !== '').map(r => {
     const o = {};
     h.forEach((k,i) => {
+      if(!k) return;
       let x = r[i];
       if(BOOL[k]) x = (x === true || String(x).toUpperCase() === 'TRUE');
       else if(NUM[k] || (t==='cau_hinh' && k==='id')) x = (x === '' ? null : Number(x));
@@ -59,8 +66,32 @@ function readT_(t){
       o[k] = x;
     });
     return o;
-  });
+  }));
 }
+
+/* ---------- Bộ nhớ đệm (CacheService) cho doGet ---------- */
+const CK_ = 'all_v1';
+function cacheGet_(){
+  const c = CacheService.getScriptCache(), n = c.get(CK_+'_n');
+  if(!n) return null;
+  const keys = []; for(let i=0;i<+n;i++) keys.push(CK_+'_'+i);
+  const m = c.getAll(keys); let s = '';
+  for(const k of keys){ if(m[k] == null) return null; s += m[k]; }
+  return s;
+}
+function cachePut_(s){
+  const c = CacheService.getScriptCache(), o = {}, size = 90000; let n = 0;
+  for(let i=0;i<s.length;i+=size) o[CK_+'_'+(n++)] = s.slice(i,i+size);
+  o[CK_+'_n'] = String(n);
+  try{ c.putAll(o, 21600); }catch(e){}
+}
+function cacheClear_(){ try{ CacheService.getScriptCache().remove(CK_+'_n'); }catch(e){} MEMO_ = {}; }
+function allJson_(){
+  let s = cacheGet_();
+  if(!s){ const out = {}; Object.keys(TABLES).forEach(t => out[t] = readT_(t)); s = JSON.stringify(out); cachePut_(s); }
+  return s;
+}
+
 function cell_(v){ if(v === null || v === undefined) return ''; if(typeof v === 'boolean') return v ? 'TRUE' : 'FALSE'; return String(v); }
 function rowIndex_(s, col, val){ // trả về các số dòng (1-based) khớp
   const h = header_(s), c = h.indexOf(col), last = s.getLastRow();
@@ -73,7 +104,7 @@ function rowObj_(s, h, r){ const v = s.getRange(r,1,1,h.length).getValues()[0], 
 
 /* ---------- Thao tác ---------- */
 function insert_(t, rows){
-  const s = sh_(t), h = header_(s);
+  const s = ensureCols_(t), h = header_(s);
   if(!rows.length) return;
   const vals = rows.map(r => h.map(k => cell_(r[k])));
   const start = s.getLastRow() + 1;
@@ -159,9 +190,9 @@ function buildView_(){
 function json_(o){ return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 function doGet(e){
   try{
-    const out = {};
-    Object.keys(TABLES).forEach(t => out[t] = readT_(t));
-    return json_({ok:true, data:out});
+    const data = allJson_();
+    if(e && e.parameter && e.parameter.only === 'cau_hinh') return json_({ok:true, data:{cau_hinh: JSON.parse(data).cau_hinh}});
+    return ContentService.createTextOutput('{"ok":true,"data":' + data + '}').setMimeType(ContentService.MimeType.JSON);
   }catch(err){ return json_({ok:false, error:String(err.message||err)}); }
 }
 function doPost(e){
@@ -173,6 +204,7 @@ function doPost(e){
     if(!TABLES[req.table]) throw new Error('Bảng không hợp lệ');
     check_(req);
     const t = req.table;
+    ensureCols_(t);
     switch(req.action){
       case 'insert': insert_(t, [].concat(req.rows)); break;
       case 'update': update_(t, req.id, req.patch || {}); break;
@@ -182,6 +214,7 @@ function doPost(e){
       default: throw new Error('Thao tác không hợp lệ');
     }
     SpreadsheetApp.flush();
+    cacheClear_();
     if(['dang_ky','khoa','ky_thuat','don_vi','lua_chon'].indexOf(t) >= 0) buildView_();
     return json_({ok:true});
   }catch(err){
@@ -190,5 +223,6 @@ function doPost(e){
 }
 
 /* ---------- Chạy tay ---------- */
-function caiDat(){ Object.keys(TABLES).forEach(sh_); buildView_(); }
+function caiDat(){ Object.keys(TABLES).forEach(ensureCols_); cacheClear_(); buildView_(); }
+function onEdit(){ cacheClear_(); } // sửa tay trên Sheet → web thấy ngay
 function onOpen(){ SpreadsheetApp.getUi().createMenu('Khảo sát CGKT').addItem('Cập nhật tab "Xem tổng hợp"','buildView_').addToUi(); }
