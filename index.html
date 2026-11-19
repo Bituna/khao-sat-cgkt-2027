@@ -301,9 +301,9 @@ function renderHead(){
 }
 function render(){ renderHead();
   [1,2,3,4].forEach(n=>{ const t=document.querySelector(`.tab[data-t="${PL_TAB[n]}"]`); const on=plOn(n);
-    t.style.display = on||ADMIN ? '' : 'none'; t.style.opacity = on ? '' : '.55'; t.title = on ? '' : 'Phụ lục đang đóng (chỉ quản trị thấy)'; });
+    t.style.display = on ? '' : 'none'; });
   const curPL=+Object.keys(PL_TAB).find(n=>PL_TAB[n]===TAB);
-  if(curPL && !plOn(curPL) && !ADMIN){ const f=[1,2,3,4].find(plOn); TAB=f?PL_TAB[f]:'phieu'; }
+  if(curPL && !plOn(curPL)){ const f=[1,2,3,4].find(plOn); TAB=f?PL_TAB[f]:'phieu'; }
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
   ({tw:()=>viewNhan('TW'),tp:()=>viewNhan('TP'),cg:viewCG,lp:viewLP,phieu:viewPhieu})[TAB]();
 }
