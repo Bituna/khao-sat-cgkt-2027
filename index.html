@@ -35,10 +35,12 @@ label{display:block;font-size:12.5px;color:var(--grey);margin-bottom:4px;font-we
 input[type=text],input[type=number],input[type=password],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
 input:focus,select:focus,textarea:focus{outline:2px solid #BFD6F2;border-color:var(--sky)}
 textarea{resize:vertical;min-height:60px}
-.tabs{display:flex;gap:6px;margin:16px 0 12px;flex-wrap:wrap}
-.tab{padding:9px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;color:var(--grey)}
+.tabs{display:flex;flex-wrap:nowrap;gap:4px;padding:4px;margin:16px 0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow-x:auto;scrollbar-width:thin}
+.tab{flex:1 0 auto;white-space:nowrap;text-align:center;padding:8px 10px;border-radius:9px;border:0;background:#fff;cursor:pointer;font-weight:600;font-size:13px;color:var(--grey);transition:background .15s}
+.tab:not(.on):hover{background:var(--ice);color:var(--navy)}
+.tab .muted{display:none}
 .tab.on{background:var(--navy);border-color:var(--navy);color:#fff}
-.tab .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--ice);color:var(--blue);font-size:12px}
+.tab .n{display:inline-block;min-width:20px;padding:0 6px;margin-left:5px;border-radius:99px;background:var(--ice);color:var(--blue);font-size:12px}
 .tab.on .n{background:#fff}
 .lay{display:grid;grid-template-columns:270px 1fr;gap:14px}
 .side{position:sticky;top:76px;align-self:start;max-height:calc(100vh - 90px);overflow:auto}
@@ -111,11 +113,11 @@ textarea{resize:vertical;min-height:60px}
   </div>
 
   <div class="tabs" id="tabs">
-    <div class="tab on" data-t="tw">① Nhận từ Trung ương <span class="muted" style="color:inherit;font-weight:400">(PL1)</span> <span class="n" id="n1">0</span></div>
-    <div class="tab" data-t="tp">② Nhận từ tuyến TP <span class="muted" style="color:inherit;font-weight:400">(PL2)</span> <span class="n" id="n2">0</span></div>
-    <div class="tab" data-t="cg">③ Chuyển giao tuyến dưới <span class="muted" style="color:inherit;font-weight:400">(PL3)</span> <span class="n" id="n3">0</span></div>
-    <div class="tab" data-t="lp">④ Cán bộ luân phiên <span class="muted" style="color:inherit;font-weight:400">(PL4)</span> <span class="n" id="n4">0</span></div>
-    <div class="tab" data-t="dt">⑤ Đào tạo văn bằng, chứng chỉ <span class="muted" style="color:inherit;font-weight:400">(PL5)</span> <span class="n" id="n5">0</span></div>
+    <div title="Phụ lục 1" class="tab on" data-t="tw">① Nhận từ Trung ương <span class="muted" style="color:inherit;font-weight:400">(PL1)</span> <span class="n" id="n1">0</span></div>
+    <div title="Phụ lục 2" class="tab" data-t="tp">② Nhận từ tuyến TP <span class="muted" style="color:inherit;font-weight:400">(PL2)</span> <span class="n" id="n2">0</span></div>
+    <div title="Phụ lục 3" class="tab" data-t="cg">③ Chuyển giao tuyến dưới <span class="muted" style="color:inherit;font-weight:400">(PL3)</span> <span class="n" id="n3">0</span></div>
+    <div title="Phụ lục 4" class="tab" data-t="lp">④ Cán bộ luân phiên <span class="muted" style="color:inherit;font-weight:400">(PL4)</span> <span class="n" id="n4">0</span></div>
+    <div title="Phụ lục 5" class="tab" data-t="dt">⑤ Đào tạo văn bằng, chứng chỉ <span class="muted" style="color:inherit;font-weight:400">(PL5)</span> <span class="n" id="n5">0</span></div>
     <div class="tab" data-t="phieu">Phiếu của khoa <span class="n" id="nPhieu">0</span></div>
   </div>
   <div id="view"></div>
