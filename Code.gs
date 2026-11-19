@@ -139,7 +139,7 @@ function check_(req){
   if(!isOpen_()) throw new Error('Đã khóa nhập liệu');
   if(t === 'dang_ky'){
     const tuyen = {}; readT_('don_vi').forEach(d => tuyen[d.id] = d.tuyen);
-    const plOf = r => (r.loai === 'cg' || r.loai === 'cg0') ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
+    const plOf = r => r.loai === 'kc' ? String(r.huong || '') : r.loai === 'cg' ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
     const need = pl => { if(pl && !plOn_(pl)) throw new Error('Phụ lục ' + pl + ' đang đóng'); };
     if(a === 'insert'){ [].concat(req.rows).forEach(r => need(plOf(r))); return true; }
     if(a === 'update' || a === 'remove'){
@@ -173,7 +173,7 @@ function buildView_(){
     let pl, ten, a, b;
     if(d.loai === 'nhan'){ pl = v.tuyen === 'TW' ? 'PL1' : 'PL2'; ten = t.ten; a = v.ten; b = me; }
     else if(d.loai === 'cg'){ pl = 'PL3'; ten = d.ten_kt; a = me; b = d.don_vi_nhan; }
-    else if(d.loai === 'cg0'){ pl = 'PL3'; ten = 'Không có kỹ thuật chuyển giao cho tuyến dưới'; a = me; b = ''; }
+    else if(d.loai === 'kc'){ pl = 'PL' + d.huong; ten = d.ten_kt || 'Không có nhu cầu'; a = ''; b = me; }
     else { pl = 'PL4'; ten = 'Chuyên khoa: ' + d.chuyen_khoa; a = d.huong === 'nhan' ? d.don_vi_khac : me; b = d.huong === 'nhan' ? me : d.don_vi_khac; }
     return [kh, pl, t.chuyen_nganh || '', ten || '', a || '', b || '', d.hinh_thuc || '', d.so_nguoi == null ? '' : d.so_nguoi, d.doi_tuong || '', d.thoi_gian || '',
             [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', d.updated_at || ''];
