@@ -240,6 +240,9 @@ let ADMIN=false, TAB='tw', FILTER={cn:'',q:'',dv:'',chiDaChon:false};
 const cfg = () => S.cau_hinh[0] || {id:1,mo:true,han_chot:null,thong_bao:''};
 const isOpen = () => { const c=cfg(); return !!c.mo && (!c.han_chot || new Date() <= new Date(c.han_chot)); };
 const canEdit = () => ADMIN || isOpen();
+const PL_TAB = {1:'tw',2:'tp',3:'cg',4:'lp'};
+const plOn = n => { const v=cfg().phu_luc; if(v==null||v==='') return true; return String(v).split(',').map(x=>x.trim()).includes(String(n)); };
+const canEditPL = n => ADMIN || (isOpen() && plOn(n));
 const byId = (t,id) => S[t].find(r=>r.id===id);
 const curKhoa = () => $('#selKhoa').value;
 
@@ -265,7 +268,7 @@ function buildSeed(){
   dv.forEach(d=>delete d._code);
   return {don_vi:dv,ky_thuat:[...kts.values()],lua_chon:lcs,
     khoa:SEED_KHOA.map((t,i)=>({id:uid(),ten:t,thu_tu:i+1})),
-    cau_hinh:[{id:1,mo:true,han_chot:'2026-12-10T17:00:00+07:00',thong_bao:'Các khoa/phòng hoàn thành đăng ký trước 17h00 ngày 10/12/2026 để Phòng KHTH/CĐT tổng hợp gửi Sở Y tế trước 15/12/2026.'}]};
+    cau_hinh:[{id:1,mo:true,phu_luc:'1,2,3,4',han_chot:'2026-12-10T17:00:00+07:00',thong_bao:'Các khoa/phòng hoàn thành đăng ký trước 17h00 ngày 10/12/2026 để Phòng KHTH/CĐT tổng hợp gửi Sở Y tế trước 15/12/2026.'}]};
 }
 async function seedIfEmpty(force){
   if(!force && S.ky_thuat.length) return;
@@ -296,7 +299,12 @@ function renderHead(){
   const mine=S.dang_ky.filter(d=>d.khoa_id===sel.value);
   $('#nPhieu').textContent = mine.length; [1,2,3,4].forEach(p=>$('#n'+p).textContent=mine.filter(d=>plOf(d)===p).length);
 }
-function render(){ renderHead(); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
+function render(){ renderHead();
+  [1,2,3,4].forEach(n=>{ const t=document.querySelector(`.tab[data-t="${PL_TAB[n]}"]`); const on=plOn(n);
+    t.style.display = on||ADMIN ? '' : 'none'; t.style.opacity = on ? '' : '.55'; t.title = on ? '' : 'Phụ lục đang đóng (chỉ quản trị thấy)'; });
+  const curPL=+Object.keys(PL_TAB).find(n=>PL_TAB[n]===TAB);
+  if(curPL && !plOn(curPL) && !ADMIN){ const f=[1,2,3,4].find(plOn); TAB=f?PL_TAB[f]:'phieu'; }
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
   ({tw:()=>viewNhan('TW'),tp:()=>viewNhan('TP'),cg:viewCG,lp:viewLP,phieu:viewPhieu})[TAB]();
 }
 function needKhoa(){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!canEdit()){toast('Đã khóa nhập liệu');return false} return true }
@@ -516,7 +524,7 @@ function tblRows(rows,loai,showKhoa){
   ${rows.map((d,i)=>{const r=rowDesc(d);return `<tr><td>${i+1}</td><td><b>${esc(byId('khoa',d.khoa_id)?.ten||'?')}</b>${d.nguoi_khai||d.sdt?`<div class="muted">${esc([d.nguoi_khai,d.sdt].filter(Boolean).join(' – '))}</div>`:''}</td><td><span class="badge b-blue">${plName[plOf(d)]}</span></td>
     <td><b>${esc(r.ten)}</b>${r.cho?' <span class="badge b-wait">chờ duyệt</span>':''}${r.chiTiet?`<div class="muted">${esc(r.chiTiet)}</div>`:''}</td><td>${esc(r.dv)}</td>
     <td>${esc(d.hinh_thuc||'')}</td><td>${d.so_nguoi??''}</td><td>${esc(d.doi_tuong||'')}</td><td>${esc(d.thoi_gian||'')}</td><td>${esc(d.ghi_chu||'')}</td>
-    <td class="noprint" style="white-space:nowrap">${canEdit()&&(ADMIN||d.khoa_id===curKhoa())?`<button class="btn sm" data-ed="${d.id}">Sửa</button> <button class="btn sm dan" data-del="${d.id}">Xóa</button>`:''}</td></tr>`}).join('')}
+    <td class="noprint" style="white-space:nowrap">${canEditPL(plOf(d))&&(ADMIN||d.khoa_id===curKhoa())?`<button class="btn sm" data-ed="${d.id}">Sửa</button> <button class="btn sm dan" data-del="${d.id}">Xóa</button>`:''}</td></tr>`}).join('')}
   </tbody></table></div>`;
 }
 function bindRowBtns(root=document){
@@ -752,6 +760,9 @@ function aCH(){
   const c=cfg(); const hc=c.han_chot?(d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16))(new Date(c.han_chot)):'';
   $('#aBody').innerHTML=`<div class="row"><div class="card">
     <div class="fld"><label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text)"><input type="checkbox" id="cMo" ${c.mo?'checked':''}> Cho phép các khoa nhập/sửa dữ liệu</label><div class="muted">Bỏ chọn = khóa: chỉ quản trị được sửa.</div></div>
+    <div class="fld"><label>Phụ lục cho phép các khoa làm</label>
+      ${[[1,'PL1 – Nhận từ Trung ương'],[2,'PL2 – Nhận từ tuyến TP'],[3,'PL3 – Chuyển giao tuyến dưới'],[4,'PL4 – Cán bộ luân phiên']].map(([n,t])=>`<label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text);margin:4px 0"><input type="checkbox" class="cPL" value="${n}" ${plOn(n)?'checked':''}> ${t}</label>`).join('')}
+      <div class="muted">Bỏ chọn = ẩn phụ lục đó với các khoa; dữ liệu đã nhập vẫn giữ và vẫn xuất Excel.</div></div>
     <div class="fld"><label>Hạn chót (sau thời điểm này tự khóa)</label><input type="datetime-local" id="cHan" value="${hc}"></div>
     <div class="fld"><label>Thông báo hiển thị đầu trang</label><textarea id="cTB">${esc(c.thong_bao||'')}</textarea></div>
     <button class="btn pri" id="cSave">Lưu cấu hình</button></div>
@@ -759,7 +770,7 @@ function aCH(){
     <div class="tools"><button class="btn" id="cBK">⬇ Sao lưu JSON</button><label class="btn" style="margin:0;color:inherit">⬆ Khôi phục JSON<input type="file" id="cRS" accept=".json" hidden></label></div>
     <div class="tools"><button class="btn" id="cSeed">Nạp lại danh mục mẫu (BV Phổi TƯ + Kiến An)</button></div>
     <div class="tools"><button class="btn dan" id="cClr">Xóa toàn bộ đăng ký của các khoa</button></div></div></div>`;
-  $('#cSave').onclick=async()=>{const p={mo:$('#cMo').checked,han_chot:$('#cHan').value?new Date($('#cHan').value).toISOString():null,thong_bao:$('#cTB').value.trim()};
+  $('#cSave').onclick=async()=>{const p={mo:$('#cMo').checked,phu_luc:[...document.querySelectorAll('.cPL:checked')].map(i=>i.value).join(','),han_chot:$('#cHan').value?new Date($('#cHan').value).toISOString():null,thong_bao:$('#cTB').value.trim()};
     if(S.cau_hinh.length) await DB.update('cau_hinh',1,p); else await DB.insert('cau_hinh',{id:1,...p}); await loadAll();render();adminView();toast('Đã lưu cấu hình')};
   $('#cBK').onclick=backup;
   $('#cRS').onchange=e=>{const f=e.target.files[0];if(!f)return;confirmDlg('Khôi phục sẽ GHI ĐÈ toàn bộ dữ liệu hiện có. Tiếp tục?',async()=>{const d=JSON.parse(await f.text());

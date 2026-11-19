@@ -15,7 +15,7 @@
 const ADMIN_PW = 'doi-mat-khau-nay';
 
 const TABLES = {
-  cau_hinh: ['id','mo','han_chot','thong_bao'],
+  cau_hinh: ['id','mo','han_chot','thong_bao','phu_luc'],
   khoa:     ['id','ten','thu_tu'],
   don_vi:   ['id','ten','tuyen','ghi_chu','duyet'],
   ky_thuat: ['id','ten','chuyen_nganh','duyet','de_xuat_khoa','created_at'],
@@ -38,6 +38,9 @@ function sh_(t){
     s.getRange(1,1,1,h.length).setValues([h]).setFontWeight('bold').setBackground('#E8F0FA');
     s.setFrozenRows(1);
     s.getRange(1,1,s.getMaxRows(),h.length).setNumberFormat('@');
+  } else if(TABLES[t]){ // bổ sung cột mới nếu sheet cũ còn thiếu
+    const cur = s.getRange(1,1,1,Math.max(s.getLastColumn(),1)).getValues()[0].map(String);
+    TABLES[t].filter(k => cur.indexOf(k) < 0).forEach(k => { const c = s.getLastColumn()+1; s.getRange(1,c).setValue(k).setFontWeight('bold').setBackground('#E8F0FA'); s.getRange(1,c,s.getMaxRows(),1).setNumberFormat('@'); });
   }
   return s;
 }
@@ -96,6 +99,12 @@ function check_(req){
   if(admin) return true;
   const t = req.table, a = req.action;
   if(!isOpen_()) throw new Error('Đã khóa nhập liệu');
+  if(t === 'dang_ky' && a === 'insert'){
+    const c = readT_('cau_hinh')[0] || {}, on = (c.phu_luc == null || c.phu_luc === '') ? ['1','2','3','4'] : String(c.phu_luc).split(',');
+    const tuyen = {}; readT_('don_vi').forEach(d => tuyen[d.id] = d.tuyen);
+    [].concat(req.rows).forEach(r => { const pl = r.loai === 'cg' ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
+      if(pl && on.indexOf(pl) < 0) throw new Error('Phụ lục ' + pl + ' đang đóng'); });
+  }
   if(t === 'dang_ky'){
     if(a === 'insert') return true;
     if(a === 'update' || a === 'remove'){

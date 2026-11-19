@@ -5,8 +5,10 @@ create table if not exists cau_hinh (
   id int primary key default 1,
   mo boolean not null default true,
   han_chot timestamptz,
-  thong_bao text
+  thong_bao text,
+  phu_luc text default '1,2,3,4'
 );
+alter table cau_hinh add column if not exists phu_luc text default '1,2,3,4';
 create table if not exists khoa (
   id uuid primary key default gen_random_uuid(),
   ten text not null,
