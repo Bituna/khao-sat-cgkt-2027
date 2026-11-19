@@ -307,7 +307,7 @@ function render(){ renderHead();
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
   ({tw:()=>viewNhan('TW'),tp:()=>viewNhan('TP'),cg:viewCG,lp:viewLP,phieu:viewPhieu})[TAB]();
 }
-function needKhoa(){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!canEdit()){toast('Đã khóa nhập liệu');return false} return true }
+function needKhoa(pl){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!canEdit()){toast('Đã khóa nhập liệu');return false} if(pl&&!canEditPL(pl)){toast('Phụ lục '+pl+' đang đóng');render();return false} return true }
 
 /* ================= TAB 1: DANH MỤC ================= */
 function ktOffers(ktId){ return S.lua_chon.filter(l=>l.ky_thuat_id===ktId) }
@@ -367,9 +367,9 @@ function viewNhan(TY){
   const qi=$('#q'); qi.oninput=()=>{FILTER.q=qi.value;clearTimeout(qi._t);qi._t=setTimeout(()=>{re();const n=$('#q');n.focus();n.setSelectionRange(n.value.length,n.value.length)},250)};
   $('#fdv').onchange=e=>{FILTER.dv=e.target.value;re()};
   $('#fmine').onchange=e=>{FILTER.chiDaChon=e.target.checked;re()};
-  $('#btnNew').onclick=()=>needKhoa()&&dlgNhan({mode:'new',TY});
-  document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{if(!needKhoa())return;const o=byId('lua_chon',b.dataset.pick);dlgNhan({mode:'pick',kt:byId('ky_thuat',o.ky_thuat_id),lc:o,TY})});
-  document.querySelectorAll('[data-otherdv]').forEach(b=>b.onclick=()=>needKhoa()&&dlgNhan({mode:'otherdv',kt:byId('ky_thuat',b.dataset.otherdv),TY}));
+  $('#btnNew').onclick=()=>needKhoa(TY==='TW'?1:2)&&dlgNhan({mode:'new',TY});
+  document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{if(!needKhoa(TY==='TW'?1:2))return;const o=byId('lua_chon',b.dataset.pick);dlgNhan({mode:'pick',kt:byId('ky_thuat',o.ky_thuat_id),lc:o,TY})});
+  document.querySelectorAll('[data-otherdv]').forEach(b=>b.onclick=()=>needKhoa(TY==='TW'?1:2)&&dlgNhan({mode:'otherdv',kt:byId('ky_thuat',b.dataset.otherdv),TY}));
 }
 
 /* ---- Hộp thoại đăng ký nhận CGKT/đào tạo ---- */
@@ -459,7 +459,7 @@ function viewCG(){
   $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 3 – Nhu cầu chuyển giao kỹ thuật cho tuyến dưới</b><div class="muted">Kỹ thuật khoa có thể chuyển giao cho các TTYT/bệnh viện tuyến dưới. Đơn vị chuyển giao: ${esc(CFG.TEN_BV)}.</div></div>
     <button class="btn pri" id="add">＋ Thêm kỹ thuật chuyển giao</button></div>
     ${tblRows(rows,'cg')}</div>`;
-  $('#add').onclick=()=>needKhoa()&&dlgCG();
+  $('#add').onclick=()=>needKhoa(3)&&dlgCG();
   bindRowBtns();
 }
 function dlgCG(edit){
@@ -486,7 +486,7 @@ function viewLP(){
   $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 4 – Hỗ trợ cán bộ luân phiên năm 2027</b><div class="muted">Nhận cán bộ tuyến trên về hỗ trợ, hoặc cử cán bộ của khoa đi hỗ trợ tuyến dưới.</div></div>
     <button class="btn pri" id="add">＋ Thêm nhu cầu luân phiên</button></div>
     ${tblRows(rows,'lp')}</div>`;
-  $('#add').onclick=()=>needKhoa()&&dlgLP();
+  $('#add').onclick=()=>needKhoa(4)&&dlgLP();
   bindRowBtns();
 }
 function dlgLP(edit){
@@ -529,7 +529,7 @@ function tblRows(rows,loai,showKhoa){
 }
 function bindRowBtns(root=document){
   const own=d=>ADMIN||(d&&d.khoa_id===curKhoa());
-  root.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{const d=byId('dang_ky',b.dataset.ed); if(!own(d))return toast('Chỉ khoa/phòng đã đề xuất mới được sửa');
+  root.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{const d=byId('dang_ky',b.dataset.ed); if(!own(d))return toast('Chỉ khoa/phòng đã đề xuất mới được sửa'); if(!canEditPL(plOf(d))){render();return toast('Phụ lục '+plOf(d)+' đang đóng')}
     if(d.loai==='nhan'){const kt=byId('ky_thuat',d.ky_thuat_id);dlgNhan({mode:'pick',kt,lc:byId('lua_chon',d.lua_chon_id),edit:d})}
     else if(d.loai==='cg') dlgCG(d); else dlgLP(d);});
   root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>!own(byId('dang_ky',b.dataset.del))?toast('Chỉ khoa/phòng đã đề xuất mới được xóa'):confirmDlg('Xóa mục này khỏi phiếu?',async()=>{await DB.remove('dang_ky',b.dataset.del);await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}));
@@ -771,7 +771,7 @@ function aCH(){
     <div class="tools"><button class="btn" id="cBK">⬇ Sao lưu JSON</button><label class="btn" style="margin:0;color:inherit">⬆ Khôi phục JSON<input type="file" id="cRS" accept=".json" hidden></label></div>
     <div class="tools"><button class="btn" id="cSeed">Nạp lại danh mục mẫu (BV Phổi TƯ + Kiến An)</button></div>
     <div class="tools"><button class="btn dan" id="cClr">Xóa toàn bộ đăng ký của các khoa</button></div></div></div>`;
-  $('#cSave').onclick=async()=>{const p={mo:$('#cMo').checked,phu_luc:[...document.querySelectorAll('.cPL:checked')].map(i=>i.value).join(','),han_chot:$('#cHan').value?new Date($('#cHan').value).toISOString():null,thong_bao:$('#cTB').value.trim()};
+  $('#cSave').onclick=async()=>{const p={mo:$('#cMo').checked,phu_luc:[...document.querySelectorAll('.cPL:checked')].map(i=>i.value).join(',')||'none',han_chot:$('#cHan').value?new Date($('#cHan').value).toISOString():null,thong_bao:$('#cTB').value.trim()};
     if(S.cau_hinh.length) await DB.update('cau_hinh',1,p); else await DB.insert('cau_hinh',{id:1,...p}); await loadAll();render();adminView();toast('Đã lưu cấu hình')};
   $('#cBK').onclick=backup;
   $('#cRS').onchange=e=>{const f=e.target.files[0];if(!f)return;confirmDlg('Khôi phục sẽ GHI ĐÈ toàn bộ dữ liệu hiện có. Tiếp tục?',async()=>{const d=JSON.parse(await f.text());
@@ -875,6 +875,7 @@ $('#inNguoi').oninput=e=>curKhoa()&&ls('cgkt_nguoi_'+curKhoa(),e.target.value); 
 $('#btnAdmin').onclick=openAdmin;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDlg()});
 window.addEventListener('beforeunload',e=>{ if(SYNC_N){ e.preventDefault(); e.returnValue=''; } });
+setInterval(async()=>{ if(document.visibilityState==='visible' && DB.remote && LOADED && !SYNC_N && !$('#ovl').classList.contains('on')){ try{ await loadAll(true); render(); }catch(e){} } },60000);
 document.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible' && DB.remote && LOADED && !SYNC_N && !$('#ovl').classList.contains('on')){ try{ await loadAll(true); render(); }catch(e){} } });
 (async function init(){
   try{
