@@ -27,6 +27,7 @@ const TABLES = {
 const BOOL = {mo:1, duyet:1};
 const NUM  = {so_nguoi:1, thu_tu:1};
 const VIEW = 'Xem tổng hợp';
+const VIEW5 = 'PL5 – Đào tạo';
 const TEN_BV = 'Bệnh viện Phổi Hải Phòng';
 
 /* ---------- Sheet helpers ---------- */
@@ -187,6 +188,33 @@ function buildView_(){
   s.setFrozenRows(1);
   if(rows.length) s.getRange(2,1,rows.length,H.length).setValues(rows);
   s.getRange(1,1,Math.max(rows.length,1)+1,H.length).setWrap(true).setVerticalAlignment('top');
+  buildView5_(k);
+}
+
+/* ---------- Tab riêng PL5 – Đào tạo văn bằng, chứng chỉ ---------- */
+function buildView5_(k){
+  if(!k){ k = {}; readT_('khoa').forEach(x => k[x.id] = x); }
+  const kTen = d => (k[d.khoa_id]||{}).ten || '?', kOrd = d => { const x = k[d.khoa_id]; return x && x.thu_tu != null ? x.thu_tu : 999; };
+  const nguoi = d => { const t = String(d.ho_ten||'').split(';').map(x=>x.trim()), c = String(d.chuc_danh||'').split(';').map(x=>x.trim());
+    return t.map((x,i) => x ? x + (c[i] ? ' (' + c[i] + ')' : '') : '').filter(Boolean).join('\n'); };
+  const H = ['STT','Nhóm','Khoa/Phòng','Loại đào tạo','Chuyên ngành / nội dung','Người được cử (chức danh)','Số lượng','Cơ sở đào tạo dự kiến','Bắt đầu dự kiến','Thời gian (tháng)','Hình thức','Nguồn kinh phí','Ghi chú','Người đề xuất','SĐT','Cập nhật'];
+  const all = readT_('dang_ky'), rows = [];
+  ['Văn bằng','Chứng chỉ'].forEach(nhom => {
+    all.filter(d => d.loai === 'dt' && (d.nhom_dt || 'Văn bằng') === nhom)
+      .sort((a,b) => String(a.loai_dt||'').localeCompare(String(b.loai_dt||''),'vi') || kOrd(a) - kOrd(b))
+      .forEach(d => rows.push([nhom, kTen(d), d.loai_dt||'', d.chuyen_khoa||'', nguoi(d), d.so_nguoi == null ? '' : d.so_nguoi, d.co_so_dt||'', d.thoi_gian||'',
+        d.so_thang||'', d.hinh_thuc||'', d.kinh_phi||'', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||'']));
+  });
+  all.filter(d => d.loai === 'kc' && String(d.huong) === '5').sort((a,b) => kOrd(a) - kOrd(b))
+    .forEach(d => rows.push(['Không có nhu cầu', kTen(d), 'Không có nhu cầu đào tạo văn bằng, chứng chỉ', '', '', '', '', '', '', '', '', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||'']));
+  const out = rows.map((r,i) => [i+1].concat(r));
+  let s = ss_().getSheetByName(VIEW5);
+  if(!s){ s = ss_().insertSheet(VIEW5, 1); }
+  s.clear();
+  s.getRange(1,1,1,H.length).setValues([H]).setFontWeight('bold').setBackground('#E8F0FA');
+  s.setFrozenRows(1);
+  if(out.length) s.getRange(2,1,out.length,H.length).setValues(out);
+  s.getRange(1,1,Math.max(out.length,1)+1,H.length).setWrap(true).setVerticalAlignment('top');
 }
 
 /* ---------- Web app ---------- */
@@ -228,4 +256,4 @@ function doPost(e){
 /* ---------- Chạy tay ---------- */
 function caiDat(){ Object.keys(TABLES).forEach(ensureCols_); cacheClear_(); buildView_(); }
 function onEdit(){ cacheClear_(); } // sửa tay trên Sheet → web thấy ngay
-function onOpen(){ SpreadsheetApp.getUi().createMenu('Khảo sát CGKT').addItem('Cập nhật tab "Xem tổng hợp"','buildView_').addToUi(); }
+function onOpen(){ SpreadsheetApp.getUi().createMenu('Khảo sát CGKT').addItem('Cập nhật tab "Xem tổng hợp" + "PL5 – Đào tạo"','buildView_').addToUi(); }
