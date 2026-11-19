@@ -875,7 +875,10 @@ $('#inNguoi').oninput=e=>curKhoa()&&ls('cgkt_nguoi_'+curKhoa(),e.target.value); 
 $('#btnAdmin').onclick=openAdmin;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDlg()});
 window.addEventListener('beforeunload',e=>{ if(SYNC_N){ e.preventDefault(); e.returnValue=''; } });
-setInterval(async()=>{ if(document.visibilityState==='visible' && DB.remote && LOADED && !SYNC_N && !$('#ovl').classList.contains('on')){ try{ await loadAll(true); render(); }catch(e){} } },60000);
+// chỉ hỏi nhẹ cấu hình mỗi 60s; có thay đổi (đóng/mở phụ lục, khóa) mới tải lại toàn bộ
+setInterval(async()=>{ if(MODE!=='gs' || document.visibilityState!=='visible' || !LOADED || SYNC_N || $('#ovl').classList.contains('on')) return;
+  try{ const r=await fetch(CFG.GSHEET_URL+(CFG.GSHEET_URL.includes('?')?'&':'?')+'only=cau_hinh&t='+Date.now()); const j=await r.json();
+    if(j.ok && JSON.stringify(j.data.cau_hinh)!==JSON.stringify(S.cau_hinh)){ await loadAll(true); render(); } }catch(e){} },60000);
 document.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible' && DB.remote && LOADED && !SYNC_N && !$('#ovl').classList.contains('on')){ try{ await loadAll(true); render(); }catch(e){} } });
 (async function init(){
   try{
