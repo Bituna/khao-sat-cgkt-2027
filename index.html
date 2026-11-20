@@ -673,7 +673,7 @@ function viewPhieu(){
 function chotVaIn(kid){
   if(chotOf(kid)) return printPhieu(kid);
   const tr=treHan(nowIso());
-  confirmDlg(`Chốt phiếu của ${byId('khoa',kid)?.ten||''} và in?\nSau khi chốt, toàn bộ dữ liệu của khoa bị khóa, chỉ Admin mở khóa được.${tr&&tr.muon?'\n⚠ '+tr.txt+'.':''}`, async()=>{
+  confirmDlg(`Chốt phiếu của ${byId('khoa',kid)?.ten||''} và in?\nSau khi chốt, toàn bộ dữ liệu của khoa bị khóa.${tr&&tr.muon?'\n⚠ '+tr.txt+'.':''}`, async()=>{
     try{ await DB.update('khoa',kid,{chot_luc:nowIso()}); await SYNC_Q; await loadAll(true); }catch(e){}
     render(); if(!chotOf(kid)) return toast('Chưa chốt được phiếu – thử lại sau',4000);
     toast('Đã chốt phiếu'); printPhieu(kid);
