@@ -244,7 +244,7 @@ const cfg = () => S.cau_hinh[0] || {id:1,mo:true,han_chot:null,thong_bao:''};
 const isOpen = () => { const c=cfg(); return !!c.mo && (!c.han_chot || new Date() <= new Date(c.han_chot)); };
 const canEdit = () => ADMIN || isOpen();
 const PL_TAB = {1:'tw',2:'tp',3:'cg',4:'lp',5:'dt'};
-const NONE_TXT = {1:'Không có nhu cầu nhận chuyển giao kỹ thuật từ BV Trung ương',2:'Không có nhu cầu nhận chuyển giao kỹ thuật từ BV tuyến thành phố',3:'Không có nhu cầu chuyển giao kỹ thuật cho tuyến dưới',5:'Không có nhu cầu đào tạo văn bằng, chứng chỉ'};
+const NONE_TXT = {1:'Không có nhu cầu nhận chuyển giao kỹ thuật từ BV Trung ương',2:'Không có nhu cầu nhận chuyển giao kỹ thuật từ BV tuyến thành phố',3:'Không có nhu cầu chuyển giao kỹ thuật cho tuyến dưới',4:'Không có nhu cầu hỗ trợ cán bộ luân phiên',5:'Không có nhu cầu đào tạo văn bằng, chứng chỉ'};
 const isNone = d => d.loai==='kc'; // bản ghi "khoa không có nhu cầu" của 1 phụ lục (huong = số PL)
 // Khối nút/ghi chú "Khoa không có nhu cầu" dùng chung cho PL1/PL2/PL3
 function noneBlock(pl, hasRows){
@@ -513,11 +513,12 @@ function dlgCG(edit){
 /* ================= TAB 3: PL4 ================= */
 function viewLP(){
   const kid=curKhoa(), rows=S.dang_ky.filter(d=>ofKhoa(d)&&d.loai==='lp').sort((a,b)=>khoaOrder(a)-khoaOrder(b));
+  const nb=noneBlock(4, kid && rows.length);
   $('#view').innerHTML=`<div class="card"><div class="tools" style="align-items:center"><div style="flex:1"><b style="color:var(--navy)">Phụ lục 4 – Hỗ trợ cán bộ luân phiên năm 2027</b><div class="muted">Nhận cán bộ tuyến trên về hỗ trợ, hoặc cử cán bộ của khoa đi hỗ trợ tuyến dưới.</div></div>
-    <button class="btn pri" id="add">＋ Thêm nhu cầu luân phiên</button></div>
-    ${tblRows(rows,'lp')}</div>`;
+    ${nb.btn}<button class="btn pri" id="add">＋ Thêm nhu cầu luân phiên</button></div>
+    ${nb.note}${nb.mine && !rows.length?'':tblRows(rows,'lp')}</div>`;
   $('#add').onclick=()=>needKhoa(4)&&dlgLP();
-  bindRowBtns();
+  nb.bind(); lockIfNone(nb,'#add'); bindRowBtns();
 }
 function dlgLP(edit){
   const d=edit||{huong:'nhan'};
@@ -992,7 +993,10 @@ async function exportWB(full){
       return o; })(),'A1:F1');
   const lp=S.dang_ky.filter(d=>d.loai==='lp');
   sheetPL(wb,'Hỗ trợ CB luân phiên ','PHỤ LỤC 4: HỖ TRỢ CÁN BỘ LUÂN PHIÊN NĂM 2027',[7.5,30,34,24,20,34],['STT','ĐƠN VỊ HỖ TRỢ','ĐƠN VỊ NHẬN HỖ TRỢ','CHUYÊN KHOA','THỜI GIAN','GHI CHÚ'],
-    lp.map((d,i)=>{const me=CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')';return [i+1,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac,d.chuyen_khoa,d.thoi_gian,[d.so_nguoi?'Số cán bộ: '+d.so_nguoi:'',d.doi_tuong,d.ghi_chu].filter(Boolean).join('\n')]}),'A1:F1',12);
+    (()=>{ const o=lp.map((d,i)=>{const me=CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')';return [i+1,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac,d.chuyen_khoa,d.thoi_gian,[d.so_nguoi?'Số cán bộ: '+d.so_nguoi:'',d.doi_tuong,d.ghi_chu].filter(Boolean).join('\n')]});
+      const ks=S.dang_ky.filter(d=>isNone(d)&&+d.huong===4).sort((a,b)=>khoaOrder(a)-khoaOrder(b));
+      if(ks.length){ o.push({section:'Khoa/phòng không có nhu cầu'}); ks.forEach(d=>o.push([o.filter(Array.isArray).length+1,'',CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')','','',NONE_TXT[4]+(d.ghi_chu?'\n'+d.ghi_chu:'')])); }
+      return o; })(),'A1:F1',12);
   if(full) sheetDT(wb);
   if(full) sheetChiTiet(wb);
   const dt=new Date().toISOString().slice(0,10);
