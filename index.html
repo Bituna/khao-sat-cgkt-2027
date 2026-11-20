@@ -346,10 +346,10 @@ function render(){ renderHead();
   if(curPL && !plOn(curPL)){ const f=[1,2,3,4,5].find(plOn); TAB=f?PL_TAB[f]:'phieu'; }
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
   ({tw:()=>viewNhan('TW'),tp:()=>viewNhan('TP'),cg:viewCG,lp:viewLP,dt:viewDT,phieu:viewPhieu})[TAB]();
-  if(!ADMIN && isLocked()) document.querySelectorAll('#view button:not(#btnPrint)').forEach(b=>{ b.disabled=true; b.title='Khoa đã chốt phiếu – chỉ Admin mở khóa'; });
+  if(!ADMIN && isLocked()) document.querySelectorAll('#view button:not(#btnPrint)').forEach(b=>{ b.disabled=true; b.title='Khoa đã chốt phiếu'; });
 }
 function needNguoi(){ if(!$('#inNguoi').value.trim()){toast('Vui lòng nhập Người đề xuất');$('#inNguoi').focus();return false} return true }
-function needKhoa(pl,boQuaNguoi){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!ADMIN&&isLocked()){toast('Khoa đã chốt phiếu – chỉ Admin mở khóa được');return false} if(!boQuaNguoi&&!needNguoi()) return false; if(!canEdit()){toast('Đã khóa nhập liệu');return false} if(pl&&!canEditPL(pl)){toast('Phụ lục '+pl+' đang đóng');render();return false} return true }
+function needKhoa(pl,boQuaNguoi){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!ADMIN&&isLocked()){toast('Khoa đã chốt phiếu');return false} if(!boQuaNguoi&&!needNguoi()) return false; if(!canEdit()){toast('Đã khóa nhập liệu');return false} if(pl&&!canEditPL(pl)){toast('Phụ lục '+pl+' đang đóng');render();return false} return true }
 
 /* ================= TAB 1: DANH MỤC ================= */
 function ktOffers(ktId){ return S.lua_chon.filter(l=>l.ky_thuat_id===ktId) }
@@ -665,7 +665,7 @@ function viewPhieu(){
   const rows=S.dang_ky.filter(ofKhoa).sort((a,b)=>plOf(a)-plOf(b)||khoaOrder(a)-khoaOrder(b));
   const last=rows.map(r=>r.updated_at||r.created_at).sort().pop();
   $('#view').innerHTML=`<div class="card"><div style="text-align:center;margin-bottom:12px"><b style="font-size:16px;color:var(--navy)">PHIẾU ĐĂNG KÝ NHU CẦU CGKT & HỖ TRỢ CHUYÊN MÔN NĂM 2027</b><div>${kid?esc(byId('khoa',kid).ten):'Tất cả khoa/phòng'} – ${esc(CFG.TEN_BV)}</div>
-    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div>${kid?(chotOf(kid)?`<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 In lại phiếu (đã chốt ${fmtDT(chotOf(kid))})</button>`:'<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 Chốt &amp; in phiếu theo mẫu phụ lục</button><div class="muted" style="margin-top:4px">Bấm in = chốt phiếu: sau đó khoa không sửa được nữa, chỉ Admin mở khóa.</div>'):''}</div>${tblRows(rows,'all')}</div>`;
+    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div>${kid?(chotOf(kid)?`<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 In lại phiếu (đã chốt ${fmtDT(chotOf(kid))})</button>`:'<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 Chốt &amp; in phiếu theo mẫu phụ lục</button><div class="muted" style="margin-top:4px">Bấm in = chốt phiếu: sau đó khoa không sửa được nữa.</div>'):''}</div>${tblRows(rows,'all')}</div>`;
   if($('#btnPrint')) $('#btnPrint').onclick=()=>chotVaIn(kid);
   bindRowBtns();
 }
