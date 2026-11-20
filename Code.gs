@@ -16,7 +16,7 @@ const ADMIN_PW = 'doi-mat-khau-nay';
 
 const TABLES = {
   cau_hinh: ['id','mo','han_chot','thong_bao','phu_luc'],
-  khoa:     ['id','ten','thu_tu'],
+  khoa:     ['id','ten','thu_tu','chot_luc'],
   don_vi:   ['id','ten','tuyen','ghi_chu','duyet'],
   ky_thuat: ['id','ten','chuyen_nganh','duyet','de_xuat_khoa','created_at'],
   lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet'],
@@ -123,8 +123,9 @@ function clear_(t){ const s = sh_(t), last = s.getLastRow(); if(last >= 2) s.del
 function isOpen_(){
   const c = readT_('cau_hinh')[0];
   if(!c) return true;
-  return !!c.mo && (!c.han_chot || new Date() <= new Date(c.han_chot));
+  return !!c.mo; // hạn chót chỉ để tính nộp muộn, không tự khóa
 }
+function chot_(kid){ const k = readT_('khoa').find(x => String(x.id) === String(kid)); return k && k.chot_luc ? k.chot_luc : ''; }
 
 // phu_luc: trống/null (dữ liệu cũ) = mở cả 4; 'none' = đóng hết; '1,3' = chỉ mở PL1, PL3
 function plOn_(n){
@@ -138,17 +139,26 @@ function check_(req){
   const admin = req.pw && req.pw === ADMIN_PW;
   if(admin) return true;
   const t = req.table, a = req.action;
+  // Khoa bấm In = chốt phiếu: chỉ ghi chot_luc 1 lần, giờ lấy theo máy chủ
+  if(t === 'khoa' && a === 'update' && req.patch && Object.keys(req.patch).join() === 'chot_luc'){
+    if(!readT_('khoa').some(x => String(x.id) === String(req.id))) throw new Error('Không tìm thấy khoa/phòng');
+    if(chot_(req.id)) throw new Error('Khoa đã chốt phiếu');
+    req.patch.chot_luc = new Date().toISOString();
+    return true;
+  }
   if(!isOpen_()) throw new Error('Đã khóa nhập liệu');
+  const lockErr = kid => { if(chot_(kid)) throw new Error('Khoa đã chốt phiếu – chỉ Admin mở khóa được'); };
   if(t === 'dang_ky'){
     const tuyen = {}; readT_('don_vi').forEach(d => tuyen[d.id] = d.tuyen);
     const plOf = r => r.loai === 'kc' ? String(r.huong || '') : r.loai === 'dt' ? '5' : r.loai === 'cg' ? '3' : r.loai === 'lp' ? '4' : (tuyen[r.don_vi_id] === 'TW' ? '1' : tuyen[r.don_vi_id] ? '2' : null);
     const need = pl => { if(pl && !plOn_(pl)) throw new Error('Phụ lục ' + pl + ' đang đóng'); };
-    if(a === 'insert'){ [].concat(req.rows).forEach(r => need(plOf(r))); return true; }
+    if(a === 'insert'){ [].concat(req.rows).forEach(r => { lockErr(r.khoa_id); need(plOf(r)); }); return true; }
     if(a === 'update' || a === 'remove'){
       const s = sh_(t), h = header_(s), rows = rowIndex_(s,'id',req.id);
       if(!rows.length) return true;
       const o = rowObj_(s,h,rows[0]);
       if(String(o.khoa_id) !== String(req.khoa_id)) throw new Error('Chỉ khoa/phòng đã đề xuất mới được sửa/xóa');
+      lockErr(o.khoa_id);
       need(plOf(o));
       if(a === 'update' && req.patch){
         if(req.patch.khoa_id && String(req.patch.khoa_id) !== String(o.khoa_id)) throw new Error('Không được đổi khoa');

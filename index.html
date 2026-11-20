@@ -99,7 +99,7 @@ textarea{resize:vertical;min-height:60px}
   <div class="logo">BVP</div>
   <div class="ttl"><b>Khảo sát nhu cầu chuyển giao kỹ thuật & hỗ trợ chuyên môn năm 2027</b><span>Bệnh viện Phổi Hải Phòng · theo CV 13256/SYT-NVY ngày 17/11/2026</span></div>
   <div class="sp"></div>
-  <span id="stBadge" class="badge"></span>
+  <span id="clock" class="badge" style="display:none;font-variant-numeric:tabular-nums"></span><span id="stBadge" class="badge"></span>
   <span id="modeBadge"></span><span id="syncBadge" class="badge" style="display:none"></span>
   <button class="btn" id="btnAdmin">🔒 Quản trị</button>
 </div></header>
@@ -241,8 +241,20 @@ const DB = MODE==='sb' ? SBDB : MODE==='gs' ? GSDB : LocalDB;
 const S = {cau_hinh:[],khoa:[],don_vi:[],ky_thuat:[],lua_chon:[],dang_ky:[]};
 let ADMIN=false, TAB='tw', FILTER={cn:'',q:'',dv:'',chiDaChon:false};
 const cfg = () => S.cau_hinh[0] || {id:1,mo:true,han_chot:null,thong_bao:''};
-const isOpen = () => { const c=cfg(); return !!c.mo && (!c.han_chot || new Date() <= new Date(c.han_chot)); };
-const canEdit = () => ADMIN || isOpen();
+const isOpen = () => !!cfg().mo; // hạn chót chỉ dùng để tính nộp muộn, không tự khóa
+const chotOf = kid => (kid && byId('khoa',kid)?.chot_luc) || '';
+const isLocked = () => !!chotOf(curKhoa());
+const canEdit = () => ADMIN || (isOpen() && !isLocked());
+// thời lượng dạng "x ngày y giờ z phút"
+function fmtDur(ms){ ms=Math.abs(ms); const m=Math.floor(ms/60000), d=Math.floor(m/1440), h=Math.floor(m%1440/60), mi=m%60; return [d?d+' ngày':'',h?h+' giờ':'',(mi||(!d&&!h))?mi+' phút':''].filter(Boolean).join(' '); }
+const fmtDT = v => new Date(v).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});
+// trạng thái nộp so với hạn chót: {muon:bool, txt}
+function treHan(t){ const h=cfg().han_chot; if(!h||!t) return null; const d=new Date(t)-new Date(h); return d>0?{muon:true,txt:'Nộp muộn '+fmtDur(d)+' so với hạn chót'}:{muon:false,txt:'Đúng hạn'}; }
+function tickClock(){ const el=$('#clock'); if(!el) return; const h=cfg().han_chot; if(!h){el.style.display='none';return} el.style.display='';
+  const d=new Date(h)-Date.now(), s=Math.floor(Math.abs(d)/1000), dd=Math.floor(s/86400), hh=String(Math.floor(s%86400/3600)).padStart(2,'0'), mm=String(Math.floor(s%3600/60)).padStart(2,'0'), ss=String(s%60).padStart(2,'0');
+  el.className='badge '+(d>0?(d<86400000?'b-wait':'b-open'):'b-close'); el.title='Hạn chót: '+fmtDT(h);
+  el.textContent = d>0 ? `⏱ Còn ${dd?dd+' ngày ':''}${hh}:${mm}:${ss} – hạn ${fmtDT(h)}` : `⏰ Quá hạn ${dd?dd+' ngày ':''}${hh}:${mm}:${ss} (hạn ${fmtDT(h)})`; }
+setInterval(tickClock,1000);
 const PL_TAB = {1:'tw',2:'tp',3:'cg',4:'lp',5:'dt'};
 const NONE_TXT = {1:'Không có nhu cầu nhận chuyển giao kỹ thuật từ BV Trung ương',2:'Không có nhu cầu nhận chuyển giao kỹ thuật từ BV tuyến thành phố',3:'Không có nhu cầu chuyển giao kỹ thuật cho tuyến dưới',4:'Không có nhu cầu hỗ trợ cán bộ luân phiên',5:'Không có nhu cầu đào tạo văn bằng, chứng chỉ'};
 const isNone = d => d.loai==='kc'; // bản ghi "khoa không có nhu cầu" của 1 phụ lục (huong = số PL)
@@ -265,7 +277,7 @@ function noneBlock(pl, hasRows){
 function lockIfNone(nb, sel){ if(!nb.mine) return; document.querySelectorAll(sel).forEach(b=>{ b.disabled=true; b.title='Khoa đã xác nhận không có nhu cầu – bấm “Bỏ xác nhận” để đăng ký'; b.style.opacity=.45; b.style.cursor='not-allowed'; }); }
 async function clearNone(pl){ for(const z of S.dang_ky.filter(x=>isNone(x)&&x.khoa_id===curKhoa()&&+x.huong===pl)) await DB.remove('dang_ky',z.id); }
 const plOn = n => { const v=cfg().phu_luc; if(v==null||v==='') return true; return String(v).split(',').map(x=>x.trim()).includes(String(n)); };
-const canEditPL = n => ADMIN || (isOpen() && plOn(n));
+const canEditPL = n => ADMIN || (isOpen() && !isLocked() && plOn(n));
 const byId = (t,id) => S[t].find(r=>r.id===id);
 const curKhoa = () => $('#selKhoa').value;
 const allMode = () => ADMIN && !curKhoa(); // quản trị chưa chọn khoa → xem tất cả
@@ -311,12 +323,14 @@ function renderHead(){
   const c=cfg(), o=isOpen();
   const hc = c.han_chot ? new Date(c.han_chot).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : '';
   $('#stBadge').className='badge '+(o?'b-open':'b-close');
-  $('#stBadge').textContent = o ? ('● Đang mở'+(hc?' · hạn '+hc:'')) : '● Đã khóa nhập liệu';
+  $('#stBadge').textContent = o ? '● Đang mở nhập liệu' : '● Đã khóa nhập liệu'; tickClock();
   $('#modeBadge').innerHTML = isDemo ? '<span class="badge b-wait" title="Dữ liệu chỉ lưu trên trình duyệt này">Chế độ dùng thử</span>' : (MODE==='sb'?'<span class="badge b-open" title="Dữ liệu lưu trên Supabase">Supabase</span>':'<span class="badge b-open" title="Dữ liệu lưu trên Google Sheet">Google Sheet</span>');
   $('#btnAdmin').textContent = ADMIN ? '⚙ Quản trị (đã đăng nhập)' : '🔒 Quản trị';
   let n='';
   if(c.thong_bao) n+=`<div class="notice info">📢 ${esc(c.thong_bao)}</div>`;
   if(!o && !ADMIN) n+=`<div class="notice">Đã khóa nhập liệu. Các khoa chỉ xem được phiếu; liên hệ quản trị nếu cần điều chỉnh.</div>`;
+  const kc=curKhoa(), ch=chotOf(kc);
+  if(ch){ const tr=treHan(ch); n+=`<div class="notice">🔒 <b>${esc(byId('khoa',kc).ten)}</b> đã chốt phiếu lúc ${fmtDT(ch)}${tr?` – <b style="color:${tr.muon?'var(--red)':'var(--green)'}">${tr.txt}</b>`:''}. ${ADMIN?'Admin vẫn sửa được; mở khóa trong Quản trị › Tổng hợp.':'Khoa không sửa được nữa – liên hệ Admin nếu cần mở khóa.'}</div>`; }
   $('#notice').innerHTML=n;
   const sel=$('#selKhoa'), cur=sel.value||ls('cgkt_khoa')||'';
   sel.innerHTML='<option value="">— Chọn khoa/phòng —</option>'+S.khoa.map(k=>`<option value="${k.id}">${esc(k.ten)}</option>`).join('');
@@ -332,9 +346,10 @@ function render(){ renderHead();
   if(curPL && !plOn(curPL)){ const f=[1,2,3,4,5].find(plOn); TAB=f?PL_TAB[f]:'phieu'; }
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===TAB));
   ({tw:()=>viewNhan('TW'),tp:()=>viewNhan('TP'),cg:viewCG,lp:viewLP,dt:viewDT,phieu:viewPhieu})[TAB]();
+  if(!ADMIN && isLocked()) document.querySelectorAll('#view button:not(#btnPrint)').forEach(b=>{ b.disabled=true; b.title='Khoa đã chốt phiếu – chỉ Admin mở khóa'; });
 }
 function needNguoi(){ if(!$('#inNguoi').value.trim()){toast('Vui lòng nhập Người đề xuất');$('#inNguoi').focus();return false} return true }
-function needKhoa(pl,boQuaNguoi){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!boQuaNguoi&&!needNguoi()) return false; if(!canEdit()){toast('Đã khóa nhập liệu');return false} if(pl&&!canEditPL(pl)){toast('Phụ lục '+pl+' đang đóng');render();return false} return true }
+function needKhoa(pl,boQuaNguoi){ if(!curKhoa()){toast('Vui lòng chọn Khoa/Phòng trước');$('#selKhoa').focus();return false} if(!ADMIN&&isLocked()){toast('Khoa đã chốt phiếu – chỉ Admin mở khóa được');return false} if(!boQuaNguoi&&!needNguoi()) return false; if(!canEdit()){toast('Đã khóa nhập liệu');return false} if(pl&&!canEditPL(pl)){toast('Phụ lục '+pl+' đang đóng');render();return false} return true }
 
 /* ================= TAB 1: DANH MỤC ================= */
 function ktOffers(ktId){ return S.lua_chon.filter(l=>l.ky_thuat_id===ktId) }
@@ -642,7 +657,7 @@ function bindRowBtns(root=document){
   root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>!own(byId('dang_ky',b.dataset.del))?toast('Chỉ khoa/phòng đã đề xuất mới được xóa'):b.dataset.pi!=null?confirmDlg('Xóa người này khỏi đăng ký đào tạo?',async()=>{const d=byId('dang_ky',b.dataset.del),pi=+b.dataset.pi,t=String(d.ho_ten||'').split(';').map(x=>x.trim()),c=String(d.chuc_danh||'').split(';').map(x=>x.trim()),keep=t.map((x,i)=>i).filter(i=>i!==pi&&t[i]);
     await DB.update('dang_ky',d.id,{ho_ten:keep.map(i=>t[i]).join('; '),chuc_danh:keep.map(i=>c[i]||'').join('; '),so_nguoi:keep.length,updated_at:nowIso()});await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}):confirmDlg('Xóa mục này khỏi phiếu?',async()=>{await DB.remove('dang_ky',b.dataset.del);await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}));
 }
-function confirmDlg(msg,fn){ openDlg(`<h3>Xác nhận</h3><p>${esc(msg)}</p><div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="cOK">Đồng ý</button></div>`);
+function confirmDlg(msg,fn){ openDlg(`<h3>Xác nhận</h3><p style="white-space:pre-line">${esc(msg)}</p><div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="cOK">Đồng ý</button></div>`);
   $('#cOK').onclick=async()=>{closeDlg();try{await fn()}catch(e){toast('Lỗi: '+e.message,4000)}} }
 function viewPhieu(){
   const kid=curKhoa();
@@ -650,11 +665,20 @@ function viewPhieu(){
   const rows=S.dang_ky.filter(ofKhoa).sort((a,b)=>plOf(a)-plOf(b)||khoaOrder(a)-khoaOrder(b));
   const last=rows.map(r=>r.updated_at||r.created_at).sort().pop();
   $('#view').innerHTML=`<div class="card"><div style="text-align:center;margin-bottom:12px"><b style="font-size:16px;color:var(--navy)">PHIẾU ĐĂNG KÝ NHU CẦU CGKT & HỖ TRỢ CHUYÊN MÔN NĂM 2027</b><div>${kid?esc(byId('khoa',kid).ten):'Tất cả khoa/phòng'} – ${esc(CFG.TEN_BV)}</div>
-    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div>${kid?'<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 In phiếu theo mẫu phụ lục</button>':''}</div>${tblRows(rows,'all')}</div>`;
-  if($('#btnPrint')) $('#btnPrint').onclick=()=>printPhieu(kid);
+    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div>${kid?(chotOf(kid)?`<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 In lại phiếu (đã chốt ${fmtDT(chotOf(kid))})</button>`:'<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 Chốt &amp; in phiếu theo mẫu phụ lục</button><div class="muted" style="margin-top:4px">Bấm in = chốt phiếu: sau đó khoa không sửa được nữa, chỉ Admin mở khóa.</div>'):''}</div>${tblRows(rows,'all')}</div>`;
+  if($('#btnPrint')) $('#btnPrint').onclick=()=>chotVaIn(kid);
   bindRowBtns();
 }
 /* ================= IN PHIẾU THEO MẪU PHỤ LỤC ================= */
+function chotVaIn(kid){
+  if(chotOf(kid)) return printPhieu(kid);
+  const tr=treHan(nowIso());
+  confirmDlg(`Chốt phiếu của ${byId('khoa',kid)?.ten||''} và in?\nSau khi chốt, toàn bộ dữ liệu của khoa bị khóa, chỉ Admin mở khóa được.${tr&&tr.muon?'\n⚠ '+tr.txt+'.':''}`, async()=>{
+    try{ await DB.update('khoa',kid,{chot_luc:nowIso()}); await SYNC_Q; await loadAll(true); }catch(e){}
+    render(); if(!chotOf(kid)) return toast('Chưa chốt được phiếu – thử lại sau',4000);
+    toast('Đã chốt phiếu'); printPhieu(kid);
+  });
+}
 function printPhieu(kid){
   const kh=byId('khoa',kid); if(!kh) return toast('Chọn Khoa/Phòng trước');
   const mine=S.dang_ky.filter(d=>d.khoa_id===kid);
@@ -681,13 +705,15 @@ function printPhieu(kid){
     {n:4,o:'port',t:'PHỤ LỤC 4: HỖ TRỢ CÁN BỘ LUÂN PHIÊN NĂM 2027',h:['STT','ĐƠN VỊ HỖ TRỢ','ĐƠN VỊ NHẬN HỖ TRỢ','CHUYÊN KHOA','THỜI GIAN','GHI CHÚ'],w:[7,22,24,16,14,17],r:lp},
     {n:5,o:'land',t:'PHỤ LỤC 5. NHU CẦU ĐÀO TẠO VĂN BẰNG, CHỨNG CHỈ NĂM 2027',h:['STT','HỌ VÀ TÊN','CHỨC DANH','NHÓM ĐÀO TẠO','LOẠI HÌNH / CHUYÊN NGÀNH','CƠ SỞ ĐÀO TẠO','SỐ THÁNG','KINH PHÍ','GHI CHÚ'],w:[5,15,10,11,19,15,7,8,10],r:dt}
   ].filter(p=>plOn(p.n));
+  const ch=chotOf(kid), tr=treHan(ch), now=nowIso();
+  const stLine=`<p class="st">${ch?'Chốt phiếu lúc '+fmtDT(ch):'Chưa chốt – in lúc '+fmtDT(now)}${cfg().han_chot?' · Hạn chót '+fmtDT(cfg().han_chot):''}${tr?' · <b class="'+(tr.muon?'late':'ok')+'">'+(tr.muon?tr.txt.toUpperCase():tr.txt)+'</b>':''}${ch&&new Date(now)-new Date(ch)>120000?' · In lại lúc '+fmtDT(now):''}</p>`;
   const page=p=>{ const nc=p.h.length, z=none(p.n); let body;
     if(p.r.length) body=p.r.map(r=>'<tr>'+r.map((c,j)=>`<td${j===0||(p.n===5&&j===6)?' class="c"':''}>${br(c)}</td>`).join('')+'</tr>').join('');
     else if(z) body=`<tr><td class="c">1</td><td colspan="${nc-1}">${esc(NONE_TXT[p.n]||'Không có nhu cầu')}${z.ghi_chu?' – '+esc(z.ghi_chu):''}</td></tr>`;
     else body=[1,2,3].map(i=>'<tr><td class="c">'+i+'</td>'+'<td></td>'.repeat(nc-1)+'</tr>').join('');
     return `<section class="${p.o}"><div class="hd"><div>SỞ Y TẾ HẢI PHÒNG<br><b>${esc(CFG.TEN_BV.toUpperCase())}</b><br><b>${esc(kh.ten.toUpperCase())}</b><hr></div>
       <div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập - Tự do - Hạnh phúc</b><hr><i>Hải Phòng, ngày ...... tháng ...... năm 2026</i></div></div>
-      <p class="t">${esc(p.t)}</p>
+      <p class="t">${esc(p.t)}</p>${stLine}
       <table><colgroup>${p.w.map(x=>`<col style="width:${x}%">`).join('')}</colgroup><thead><tr>${p.h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
       <div class="sg"><div><b>NGƯỜI ĐỀ XUẤT</b><i>(Ký, ghi rõ họ tên)</i><div class="sp"></div>${esc(nguoi)}${sdt?'<br>ĐT: '+esc(sdt):''}</div>
       <div><b>TRƯỞNG KHOA/PHÒNG</b><i>(Ký, ghi rõ họ tên)</i><div class="sp"></div></div></div></section>`; };
@@ -695,7 +721,7 @@ function printPhieu(kid){
     @page land{size:A4 landscape;margin:12mm 12mm} @page port{size:A4 portrait;margin:15mm 12mm}
     body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;margin:0}
     section{break-after:page} section:last-child{break-after:auto} .land{page:land} .port{page:port}
-    .t{text-align:center;font-weight:bold;font-size:13pt;margin:0 0 6pt} .port .t{text-align:left}
+    .t{text-align:center;font-weight:bold;font-size:13pt;margin:0 0 4pt} .st{text-align:center;font-style:italic;font-size:11pt;margin:0 0 8pt} .st .late{color:#c00000;font-style:normal} .st .ok{font-style:normal} .port .t{text-align:left}
     .hd{display:flex;justify-content:space-between;text-align:center;margin-bottom:12pt;font-size:12pt;line-height:1.35} .hd>div:first-child{width:42%} .hd>div:last-child{width:56%} .hd b{font-size:12pt} .hd hr{width:35%;border:0;border-top:1px solid #000;margin:2pt auto 4pt} .hd i{font-size:12pt}
     .port .hd{font-size:11pt} .port .hd b,.port .hd i{font-size:11pt}
     table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group} tr{break-inside:avoid}
@@ -759,12 +785,13 @@ function aTong(){
     <div class="kpi" style="background:var(--pink)"><b>${pend}</b><span>Đề xuất chờ duyệt</span></div></div>
     <div class="tools"><button class="btn gr" id="xSo">⬇ Xuất mẫu gửi Sở (4 phụ lục)</button><button class="btn pri" id="xCT">⬇ Xuất file tổng hợp toàn bộ</button><button class="btn" id="xBK">⬇ Sao lưu dữ liệu (JSON)</button>
       ${pend?'<span class="badge b-wait" style="align-self:center">Còn đề xuất chưa duyệt – vẫn được đưa vào file xuất</span>':''}</div>
-    <div class="row"><div><b>Tình trạng các khoa</b><div class="scroll" style="max-height:300px;margin-top:6px"><table class="tbl"><thead><tr><th>Khoa/Phòng</th><th>Số mục</th><th>Người đề xuất</th><th>Cập nhật</th></tr></thead><tbody>
-      ${S.khoa.map(k=>{const r=S.dang_ky.filter(d=>d.khoa_id===k.id);const l=r.map(x=>x.updated_at||x.created_at).sort().pop();return `<tr><td>${esc(k.ten)}</td><td>${r.length?`<span class="badge b-open">${r.length}</span>`:'<span class="badge b-close">chưa</span>'}</td><td>${esc(uniq(r.map(x=>x.nguoi_khai)).join(', '))}</td><td>${l?new Date(l).toLocaleString('vi-VN'):''}</td></tr>`}).join('')}
+    <div class="row"><div><b>Tình trạng các khoa</b><div class="scroll" style="max-height:300px;margin-top:6px"><table class="tbl"><thead><tr><th>Khoa/Phòng</th><th>Số mục</th><th>Người đề xuất</th><th>Cập nhật</th><th>Chốt phiếu</th></tr></thead><tbody>
+      ${S.khoa.map(k=>{const r=S.dang_ky.filter(d=>d.khoa_id===k.id);const l=r.map(x=>x.updated_at||x.created_at).sort().pop();return `<tr><td>${esc(k.ten)}</td><td>${r.length?`<span class="badge b-open">${r.length}</span>`:'<span class="badge b-close">chưa</span>'}</td><td>${esc(uniq(r.map(x=>x.nguoi_khai)).join(', '))}</td><td>${l?new Date(l).toLocaleString('vi-VN'):''}</td><td style="white-space:nowrap">${k.chot_luc?(t=>`${fmtDT(k.chot_luc)}${t?` <span class="badge ${t.muon?'b-close':'b-open'}">${t.muon?'muộn '+fmtDur(new Date(k.chot_luc)-new Date(cfg().han_chot)):'đúng hạn'}</span>`:''} <button class="btn sm" data-unlock="${k.id}">Mở khóa</button>`)(treHan(k.chot_luc)):'<span class="muted">chưa chốt</span>'}</td></tr>`}).join('')}
       </tbody></table></div></div>
       <div><b>PL1 – Nhận từ BV Trung ương (đã gộp)</b><div style="margin-top:6px">${gt(g1)}</div></div></div>
     <div style="margin-top:14px"><b>PL2 – Nhận từ BV tuyến thành phố (đã gộp)</b><div style="margin-top:6px">${gt(g2)}</div></div>
     <div style="margin-top:14px"><b>Tất cả bản ghi</b> <span class="muted">(quản trị sửa/xóa được kể cả khi đã khóa)</span><div class="scroll" style="margin-top:6px">${tblRows([...S.dang_ky].sort((a,b)=>plOf(a)-plOf(b)||khoaTen(a.khoa_id).localeCompare(khoaTen(b.khoa_id),'vi')),'all',true)}</div></div>`;
+  document.querySelectorAll('[data-unlock]').forEach(b=>b.onclick=()=>confirmDlg('Mở khóa phiếu của '+khoaTen(b.dataset.unlock)+'? Khoa sẽ sửa được và phải bấm in lại để chốt lần mới.',async()=>{await DB.update('khoa',b.dataset.unlock,{chot_luc:''});await SYNC_Q;await loadAll(true);render();adminView();toast('Đã mở khóa')}));
   $('#xSo').onclick=()=>exportWB(false); $('#xCT').onclick=()=>exportWB(true); $('#xBK').onclick=backup;
   bindRowBtns($('#aBody'));
 }
@@ -927,7 +954,7 @@ function aCH(){
     <div class="fld"><label>Phụ lục cho phép các khoa làm</label>
       ${[[1,'PL1 – Nhận từ Trung ương'],[2,'PL2 – Nhận từ tuyến TP'],[3,'PL3 – Chuyển giao tuyến dưới'],[4,'PL4 – Cán bộ luân phiên'],[5,'PL5 – Đào tạo văn bằng, chứng chỉ']].map(([n,t])=>`<label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text);margin:4px 0"><input type="checkbox" class="cPL" value="${n}" ${plOn(n)?'checked':''}> ${t}</label>`).join('')}
       <div class="muted">Bỏ chọn = ẩn phụ lục đó với các khoa; dữ liệu đã nhập vẫn giữ và vẫn xuất Excel.</div></div>
-    <div class="fld"><label>Hạn chót (sau thời điểm này tự khóa)</label><input type="datetime-local" id="cHan" value="${hc}"></div>
+    <div class="fld"><label>Hạn chót (dùng cho đồng hồ đếm ngược và tính nộp muộn – không tự khóa)</label><input type="datetime-local" id="cHan" value="${hc}"></div>
     <div class="fld"><label>Thông báo hiển thị đầu trang</label><textarea id="cTB">${esc(c.thong_bao||'')}</textarea></div>
     <button class="btn pri" id="cSave">Lưu cấu hình</button></div>
     <div class="card"><b>Dữ liệu</b><p class="muted">Chế độ: ${isDemo?'<b>dùng thử</b> – dữ liệu lưu trên trình duyệt này, người khác không thấy. Dán GSHEET_URL trong file để dùng nhiều người.':(MODE==='sb'?'<b>Supabase</b>':'<b>Google Sheet</b>')+' – dùng chung cho mọi máy.'}</p>
