@@ -649,9 +649,63 @@ function viewPhieu(){
   const rows=S.dang_ky.filter(ofKhoa).sort((a,b)=>plOf(a)-plOf(b)||khoaOrder(a)-khoaOrder(b));
   const last=rows.map(r=>r.updated_at||r.created_at).sort().pop();
   $('#view').innerHTML=`<div class="card"><div style="text-align:center;margin-bottom:12px"><b style="font-size:16px;color:var(--navy)">PHIẾU ĐĂNG KÝ NHU CẦU CGKT & HỖ TRỢ CHUYÊN MÔN NĂM 2027</b><div>${kid?esc(byId('khoa',kid).ten):'Tất cả khoa/phòng'} – ${esc(CFG.TEN_BV)}</div>
-    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div></div>${tblRows(rows,'all')}</div>`;
+    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div>${kid?'<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 In phiếu theo mẫu phụ lục</button>':''}</div>${tblRows(rows,'all')}</div>`;
+  if($('#btnPrint')) $('#btnPrint').onclick=()=>printPhieu(kid);
   bindRowBtns();
 }
+/* ================= IN PHIẾU THEO MẪU PHỤ LỤC ================= */
+function printPhieu(kid){
+  const kh=byId('khoa',kid); if(!kh) return toast('Chọn Khoa/Phòng trước');
+  const mine=S.dang_ky.filter(d=>d.khoa_id===kid);
+  const nguoi=$('#inNguoi').value.trim()||uniq(mine.map(d=>d.nguoi_khai)).join('; ');
+  const sdt=$('#inSdt').value.trim()||uniq(mine.map(d=>d.sdt)).join('; ');
+  const me=CFG.TEN_BV+' ('+kh.ten+')', br=s=>esc(s).replace(/\n/g,'<br>');
+  const H6=['TT','TÊN KỸ THUẬT CHUYỂN GIAO','ĐƠN VỊ CHUYỂN GIAO','ĐƠN VỊ NHẬN CHUYỂN GIAO','DỰ KIẾN THỜI GIAN THỰC HIỆN CHUYỂN GIAO','GHI CHÚ'], W6=[6,30,18,20,14,12];
+  const none=pl=>mine.find(d=>isNone(d)&&+d.huong===pl);
+  const nhan=pl=>mine.filter(d=>d.loai==='nhan'&&plOf(d)===pl).map(d=>({d,k:byId('ky_thuat',d.ky_thuat_id)||{},v:byId('don_vi',d.don_vi_id)||{},o:byId('lua_chon',d.lua_chon_id)||{}}))
+    .sort((a,b)=>String(a.k.chuyen_nganh).localeCompare(String(b.k.chuyen_nganh),'vi')||String(a.k.ten).localeCompare(String(b.k.ten),'vi'))
+    .map(({d,k,v,o},i)=>[i+1,k.ten||'',v.ten||'',me,d.thoi_gian||'',['Hình thức: '+(d.hinh_thuc||''),d.so_nguoi?'Số người: '+d.so_nguoi+(d.doi_tuong?' ('+d.doi_tuong+')':''):'',[o.goi,o.thoi_gian].filter(Boolean).length?'Khóa: '+[o.goi,o.thoi_gian].filter(Boolean).join(', '):'',d.ghi_chu].filter(x=>x&&x!=='Hình thức: ').join('\n')]);
+  const cg=mine.filter(d=>d.loai==='cg').sort((a,b)=>String(a.ten_kt).localeCompare(String(b.ten_kt),'vi'))
+    .map((d,i)=>[i+1,d.ten_kt||'',me,d.don_vi_nhan||'',d.thoi_gian||'',[d.hinh_thuc,d.ghi_chu].filter(Boolean).join('\n')]);
+  const lp=mine.filter(d=>d.loai==='lp')
+    .map((d,i)=>[i+1,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac,d.chuyen_khoa||'',d.thoi_gian||'',[d.so_nguoi?'Số cán bộ: '+d.so_nguoi:'',d.doi_tuong,d.ghi_chu].filter(Boolean).join('\n')]);
+  let n5=0; const dt=mine.filter(d=>d.loai==='dt').sort((a,b)=>String(a.nhom_dt).localeCompare(String(b.nhom_dt),'vi')||String(a.loai_dt).localeCompare(String(b.loai_dt),'vi'))
+    .flatMap(d=>{ const t=String(d.ho_ten||'').split(';').map(x=>x.trim()), c=String(d.chuc_danh||'').split(';').map(x=>x.trim());
+      const ps=t.map((x,i)=>({t:x,c:c[i]||''})).filter(x=>x.t); return (ps.length?ps:[{t:'',c:''}])
+      .map(p=>[++n5,p.t,p.c,d.nhom_dt||'',dtTen(d),d.co_so_dt||'',d.so_thang||'',d.kinh_phi||'',[d.thoi_gian?'Bắt đầu: '+d.thoi_gian:'',d.hinh_thuc,d.ghi_chu].filter(Boolean).join('\n')]); });
+  const PL=[
+    {n:1,o:'land',t:'PHỤ LỤC 1. NHU CẦU NHẬN CHUYỂN GIAO KỸ THUẬT TỪ CÁC BV TRUNG ƯƠNG NĂM 2027',h:H6,w:W6,r:nhan(1)},
+    {n:2,o:'land',t:'PHỤ LỤC 2. NHU CẦU NHẬN CHUYỂN GIAO KỸ THUẬT TỪ CÁC BV TUYẾN THÀNH PHỐ NĂM 2027',h:H6,w:W6,r:nhan(2)},
+    {n:3,o:'land',t:'PHỤ LỤC 3. NHU CẦU CHUYỂN GIAO KỸ THUẬT TỪ CÁC BV TUYẾN THÀNH PHỐ NĂM 2027',h:H6,w:W6,r:cg},
+    {n:4,o:'port',t:'PHỤ LỤC 4: HỖ TRỢ CÁN BỘ LUÂN PHIÊN NĂM 2027',h:['STT','ĐƠN VỊ HỖ TRỢ','ĐƠN VỊ NHẬN HỖ TRỢ','CHUYÊN KHOA','THỜI GIAN','GHI CHÚ'],w:[7,22,24,16,14,17],r:lp},
+    {n:5,o:'land',t:'PHỤ LỤC 5. NHU CẦU ĐÀO TẠO VĂN BẰNG, CHỨNG CHỈ NĂM 2027',h:['STT','HỌ VÀ TÊN','CHỨC DANH','NHÓM ĐÀO TẠO','LOẠI HÌNH / CHUYÊN NGÀNH','CƠ SỞ ĐÀO TẠO','SỐ THÁNG','KINH PHÍ','GHI CHÚ'],w:[5,15,10,11,19,15,7,8,10],r:dt}
+  ].filter(p=>plOn(p.n));
+  const page=p=>{ const nc=p.h.length, z=none(p.n); let body;
+    if(p.r.length) body=p.r.map(r=>'<tr>'+r.map((c,j)=>`<td${j===0||(p.n===5&&j===6)?' class="c"':''}>${br(c)}</td>`).join('')+'</tr>').join('');
+    else if(z) body=`<tr><td class="c">1</td><td colspan="${nc-1}">${esc(NONE_TXT[p.n]||'Không có nhu cầu')}${z.ghi_chu?' – '+esc(z.ghi_chu):''}</td></tr>`;
+    else body=[1,2,3].map(i=>'<tr><td class="c">'+i+'</td>'+'<td></td>'.repeat(nc-1)+'</tr>').join('');
+    return `<section class="${p.o}"><div class="hd"><div>SỞ Y TẾ HẢI PHÒNG<br><b>${esc(CFG.TEN_BV.toUpperCase())}</b><br><b>${esc(kh.ten.toUpperCase())}</b><hr></div>
+      <div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập - Tự do - Hạnh phúc</b><hr><i>Hải Phòng, ngày ...... tháng ...... năm 2026</i></div></div>
+      <p class="t">${esc(p.t)}</p>
+      <table><colgroup>${p.w.map(x=>`<col style="width:${x}%">`).join('')}</colgroup><thead><tr>${p.h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
+      <div class="sg"><div><b>NGƯỜI ĐỀ XUẤT</b><i>(Ký, ghi rõ họ tên)</i><div class="sp"></div>${esc(nguoi)}${sdt?'<br>ĐT: '+esc(sdt):''}</div>
+      <div><b>TRƯỞNG KHOA/PHÒNG</b><i>(Ký, ghi rõ họ tên)</i><div class="sp"></div></div></div></section>`; };
+  const html=`<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>Phieu_CGKT_2027_${esc(kh.ten)}</title><style>
+    @page land{size:A4 landscape;margin:12mm 12mm} @page port{size:A4 portrait;margin:15mm 12mm}
+    body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;margin:0}
+    section{break-after:page} section:last-child{break-after:auto} .land{page:land} .port{page:port}
+    .t{text-align:center;font-weight:bold;font-size:13pt;margin:0 0 6pt} .port .t{text-align:left}
+    .hd{display:flex;justify-content:space-between;text-align:center;margin-bottom:12pt;font-size:12pt;line-height:1.35} .hd>div:first-child{width:42%} .hd>div:last-child{width:56%} .hd b{font-size:12pt} .hd hr{width:35%;border:0;border-top:1px solid #000;margin:2pt auto 4pt} .hd i{font-size:12pt}
+    .port .hd{font-size:11pt} .port .hd b,.port .hd i{font-size:11pt}
+    table{width:100%;border-collapse:collapse;table-layout:fixed} thead{display:table-header-group} tr{break-inside:avoid}
+    th,td{border:1px solid #000;padding:4pt 5pt;vertical-align:top;font-size:11pt;word-wrap:break-word} th{font-weight:bold;text-align:center;vertical-align:middle} td{height:18pt} .c{text-align:center}
+    .sg{display:flex;justify-content:space-between;margin-top:14pt;break-inside:avoid;text-align:center} .sg>div{width:42%} .sg b,.sg i{display:block} .sg .d{margin-bottom:4pt} .sp{height:60pt}
+  </style></head><body>${PL.map(page).join('')}</body></html>`;
+  const f=document.createElement('iframe'); f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0'; document.body.appendChild(f);
+  const w=f.contentWindow; w.document.open(); w.document.write(html); w.document.close();
+  setTimeout(()=>{ w.focus(); w.print(); setTimeout(()=>f.remove(),60000); },300);
+}
+
 
 /* ================= QUẢN TRỊ ================= */
 let ATAB='tong';
