@@ -152,6 +152,10 @@ const tien = v => { const n=+String(v??'').replace(/[^\d]/g,''); return n?n.toLo
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2));
 const nowIso = () => new Date().toISOString();
+// Đơn vị chắc chắn thuộc tuyến thành phố (PL2) – chặn nhập nhầm vào PL1
+const TP_KEYS=['viet tiep'];
+const laTuyenTP = ten => TP_KEYS.some(k=>norm(ten).includes(k));
+function canhBaoTuyen(ten,TY){ return TY==='TW'&&laTuyenTP(ten) ? `${ten} là bệnh viện tuyến thành phố – thuộc Phụ lục 2. Vui lòng đăng ký ở tab PL2.` : ''; }
 function norm(s){
   return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g,'d').toLowerCase()
     .replace(/[^a-z0-9]+/g,' ').trim().replace(/^(ky thuat|dao tao)\s+/,'').trim();
@@ -432,8 +436,11 @@ function dlgOffer(o,TY){
     <div class="row"><div class="fld"><label>Gói / khóa</label><input type="text" id="oGoi" value="${esc(o.goi||'')}"></div>
       <div class="fld"><label>Học phí tham khảo</label><input type="text" id="oHP" value="${esc(o.hoc_phi||'')}"></div></div>
     <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="oOK">Lưu</button></div>`);
+  { const i=$('#oDV'), w=document.createElement('div'); w.style.cssText='display:none;margin:-4px 0 10px;color:#c00000'; i.closest('.fld').after(w);
+    i.addEventListener('input',()=>{const m=canhBaoTuyen(i.value.trim(),TY); w.textContent=m?'⚠ '+m:''; w.style.display=m?'':'none'}); }
   $('#oOK').onclick=async()=>{ try{
     const ten=$('#oDV').value.trim(); if(!ten) return toast('Nhập đơn vị chuyển giao/đào tạo');
+    if(canhBaoTuyen(ten,TY)) return toast(canhBaoTuyen(ten,TY),5000);
     let d=S.don_vi.find(x=>norm(x.ten)===norm(ten));
     if(d && d.tuyen!==TY) return toast(`${d.ten} thuộc ${d.tuyen==='TW'?'tuyến Trung ương':'tuyến thành phố'}`,4000);
     if(d && d.id!==o.don_vi_id && S.lua_chon.some(l=>l.id!==o.id&&l.ky_thuat_id===o.ky_thuat_id&&l.don_vi_id===d.id)) return toast('Kỹ thuật này đã có đơn vị đó – bấm Chọn ở dòng tương ứng',4000);
@@ -488,6 +495,9 @@ function dlgNhan({mode,kt,lc,edit,TY}){
       <div class="fld"><label>Số tiền dự kiến (đồng)${needTien?' *':''}</label><input type="text" inputmode="numeric" id="fTien" value="${esc(tien(d.so_tien))}" placeholder="VD: 50.000.000"></div></div>
     <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến sẽ cử đi, lý do, điều kiện trang thiết bị…">${esc(d.ghi_chu||'')}</textarea></div>
     <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">${edit?'Lưu':'Thêm vào phiếu'}</button></div>`);
+  const live=(id,TY)=>{const i=$(id); if(!i) return; const w=document.createElement('div'); w.className='notice'; w.style.cssText='display:none;margin:-4px 0 10px;color:#c00000'; i.closest('.row,.fld').after(w);
+    i.addEventListener('input',()=>{const m=canhBaoTuyen(i.value.trim(),TY); w.textContent=m?'⚠ '+m:''; w.style.display=m?'':'none'});};
+  live('#fDV',TY);
   // gợi ý trùng tên
   if(mode==='new'){
     const ten=$('#fTen'); ten.focus();
@@ -514,6 +524,7 @@ function dlgNhan({mode,kt,lc,edit,TY}){
       if($('#fLC')){ lcId=$('#fLC').value; dvId=byId('lua_chon',lcId).don_vi_id; }
       else {
         const dvTen=$('#fDV').value.trim(); if(!dvTen) return toast('Nhập đơn vị chuyển giao/đào tạo');
+        if(canhBaoTuyen(dvTen,TY)) return toast(canhBaoTuyen(dvTen,TY),5000);
         let dv=S.don_vi.find(x=>norm(x.ten)===norm(dvTen));
         if(dv && dv.tuyen!==TY) return toast(`${dv.ten} thuộc ${dv.tuyen==='TW'?'tuyến Trung ương – đăng ký ở tab PL1':'tuyến thành phố – đăng ký ở tab PL2'}`,4000);
         if(!dv){dv={id:uid(),ten:dvTen,tuyen:TY,duyet:ADMIN,ghi_chu:'Khoa đề xuất'};await DB.insert('don_vi',dv)}
