@@ -497,14 +497,13 @@ function dlgNhan({mode,kt,lc,edit,TY}){
       <div class="fld"><label>Tuyến</label><input type="text" value="${TY==='TW'?'Trung ương':'Tuyến thành phố'}" disabled></div></div>`;
   }
   const defDT = d.doi_tuong ?? (lc?lc.doi_tuong:'');
-  const needTien = mode==='new' || mode==='otherdv' || (kt && !kt.duyet) || (lc && !lc.duyet) || (edit && !d.lua_chon_id); // đề xuất kỹ thuật/đơn vị mới: bắt buộc số tiền dự kiến
   openDlg(`<h3>${title}</h3><div class="sub">${PLN} · ${esc(byId('khoa',d.khoa_id||curKhoa())?.ten||'')}</div>
     ${top}${dvPart}
     <div class="row3"><div class="fld"><label>Hình thức</label><select id="fHT">${optHT(d.hinh_thuc||(mode==='pick'?HINH_THUC[1]:HINH_THUC[0]))}</select></div>
       <div class="fld"><label>Số người dự kiến</label><input type="number" min="0" id="fSL" value="${d.so_nguoi??1}"></div>
       <div class="fld"><label>Dự kiến thời gian</label><select id="fTG">${optTG(d.thoi_gian||'Quý I/2027')}</select></div></div>
     <div class="row"><div class="fld"><label>Đối tượng cử đi / nhận chuyển giao</label><input type="text" id="fDT" value="${esc(defDT)}" placeholder="VD: 01 Bác sĩ, 01 Điều dưỡng"></div>
-      <div class="fld"><label>Số tiền dự kiến (đồng)${needTien?' *':''}</label><input type="text" inputmode="numeric" id="fTien" value="${esc(tien(d.so_tien))}" placeholder="VD: 50.000.000"></div></div>
+      <div class="fld"><label>Số tiền dự kiến (đồng)</label><input type="text" inputmode="numeric" id="fTien" value="${esc(tien(d.so_tien||tienTuHP(lc?.hoc_phi)))}" placeholder="VD: 50.000.000"></div></div>
     <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến sẽ cử đi, lý do, điều kiện trang thiết bị…">${esc(d.ghi_chu||'')}</textarea></div>
     <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">${edit?'Lưu':'Thêm vào phiếu'}</button></div>`);
   const live=(id,TY)=>{const i=$(id); if(!i) return; const w=document.createElement('div'); w.className='notice'; w.style.cssText='display:none;margin:-4px 0 10px;color:#c00000'; i.closest('.row,.fld').after(w);
@@ -520,9 +519,10 @@ function dlgNhan({mode,kt,lc,edit,TY}){
     };
   }
   $('#fTien').oninput=e=>{const t=tien(e.target.value);e.target.value=t};
-  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
+  if($('#fLC')) $('#fLC').onchange=()=>{const hp=tienTuHP(byId('lua_chon',$('#fLC').value)?.hoc_phi); if(hp) $('#fTien').value=tien(hp)};
+  markReq();
+  $('#fOK').onclick=async()=>{ if(!needNguoi()||!duDu()) return;
     const soTien=+$('#fTien').value.replace(/[^\d]/g,'')||0;
-    if(needTien && !soTien){ $('#fTien').focus(); return toast('Vui lòng nhập Số tiền dự kiến'); }
     try{
       const base={so_tien:soTien||'',hinh_thuc:$('#fHT').value,so_nguoi:+$('#fSL').value||0,thoi_gian:$('#fTG').value,doi_tuong:$('#fDT').value.trim(),ghi_chu:$('#fGC').value.trim(),
         nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
@@ -573,7 +573,8 @@ function dlgCG(edit){
     <div class="fld"><label>Hình thức</label><select id="fHT">${optHT(d.hinh_thuc||HINH_THUC[0])}</select></div></div>
     <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến tham gia, ...">${esc(d.ghi_chu||'')}</textarea></div>
     <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">Lưu</button></div>`);
-  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
+  markReq();
+  $('#fOK').onclick=async()=>{ if(!needNguoi()||!duDu()) return;
     const ten=$('#fTen').value.trim(),nhan=$('#fNhan').value.trim(); if(!ten||!nhan) return toast('Nhập tên kỹ thuật và đơn vị nhận');
     const row={loai:'cg',ten_kt:ten,don_vi_nhan:nhan,thoi_gian:$('#fTG').value,hinh_thuc:$('#fHT').value,ghi_chu:$('#fGC').value.trim(),nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
     try{ if(edit) await DB.update('dang_ky',edit.id,row); else { await clearNone(3); await DB.insert('dang_ky',{id:uid(),khoa_id:curKhoa(),created_at:nowIso(),...row}); }
@@ -603,7 +604,8 @@ function dlgLP(edit){
     <div class="fld"><label>Ghi chú</label><textarea id="fGC" placeholder="Ghi tên CBYT dự kiến tham gia, ...">${esc(d.ghi_chu||'')}</textarea></div>
     <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="fOK">Lưu</button></div>`);
   const upd=()=>$('#lbDV').textContent=$('#fHuong').value==='nhan'?'Đơn vị hỗ trợ (cử cán bộ về) *':'Đơn vị nhận hỗ trợ *'; upd(); $('#fHuong').onchange=upd;
-  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
+  markReq();
+  $('#fOK').onclick=async()=>{ if(!needNguoi()||!duDu()) return;
     const dv=$('#fDV').value.trim(),ck=$('#fCK').value.trim(); if(!dv||!ck) return toast('Nhập đơn vị và chuyên khoa');
     const row={loai:'lp',huong:$('#fHuong').value,don_vi_khac:dv,chuyen_khoa:ck,so_nguoi:+$('#fSL').value||0,thoi_gian:$('#fTG').value,doi_tuong:$('#fDT').value.trim(),ghi_chu:$('#fGC').value.trim(),nguoi_khai:$('#inNguoi').value.trim(),sdt:$('#inSdt').value.trim(),updated_at:nowIso()};
     try{ if(edit) await DB.update('dang_ky',edit.id,row); else await DB.insert('dang_ky',{id:uid(),khoa_id:curKhoa(),created_at:nowIso(),...row});
@@ -664,7 +666,8 @@ function dlgDT(edit){
   $('#fLoai').onchange=()=>{$('#fLoaiKhac').style.display=$('#fLoai').value==='khac'?'block':'none'};
   $('#fTien').oninput=e=>{e.target.value=tien(e.target.value)};
   $('#fKP').onchange=()=>{$('#fKPKhac').style.display=$('#fKP').value==='khac'?'block':'none'; if($('#fKP').value==='khac') $('#fKPKhac').focus()};
-  $('#fOK').onclick=async()=>{ if(!needNguoi()) return;
+  markReq();
+  $('#fOK').onclick=async()=>{ if(!needNguoi()||!duDu()) return;
     const loai=$('#fLoai').value==='khac'?$('#fLoaiKhac').value.trim():$('#fLoai').value;
     const kp=$('#fKP').value==='khac'?$('#fKPKhac').value.trim():'NQ10';
     const ck=$('#fCK').value.trim();
@@ -716,6 +719,24 @@ function bindRowBtns(root=document){
   root.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>!own(byId('dang_ky',b.dataset.del))?toast('Chỉ khoa/phòng đã đề xuất mới được xóa'):b.dataset.pi!=null?confirmDlg('Xóa người này khỏi đăng ký đào tạo?',async()=>{const d=byId('dang_ky',b.dataset.del),pi=+b.dataset.pi,t=String(d.ho_ten||'').split(';').map(x=>x.trim()),c=String(d.chuc_danh||'').split(';').map(x=>x.trim()),keep=t.map((x,i)=>i).filter(i=>i!==pi&&t[i]);
     await DB.update('dang_ky',d.id,{ho_ten:keep.map(i=>t[i]).join('; '),chuc_danh:keep.map(i=>c[i]||'').join('; '),so_nguoi:keep.length,updated_at:nowIso()});await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}):confirmDlg('Xóa mục này khỏi phiếu?',async()=>{await DB.remove('dang_ky',b.dataset.del);await loadAll();render();if(INADMIN)adminView();toast('Đã xóa')}));
 }
+/* ---- Bắt buộc mọi ô trong form đăng ký (trừ Ghi chú) ---- */
+function markReq(){ document.querySelectorAll('#dlg .fld').forEach(f=>{ const l=f.querySelector('label'), e=f.querySelector('input,select,textarea');
+  if(!l||!e||e.id==='fGC'||e.disabled||l.textContent.includes('*')) return; l.insertAdjacentText('beforeend',' *'); }); }
+function thieuO(){
+  const vis=e=>e.getClientRects().length>0;
+  for(const e of document.querySelectorAll('#dlg input, #dlg select, #dlg textarea')){
+    if(e.id==='fGC'||e.disabled||e.type==='checkbox'||e.type==='hidden'||!vis(e)||e.closest('.ngr')) continue;
+    const v=String(e.value||'').trim();
+    if(!v || (e.type==='number' && !(+v>0)) || (e.id==='fTien' && !(+v.replace(/[^\d]/g,'')>0))) return e;
+  }
+  for(const w of document.querySelectorAll('#dlg .ngr')){ const t=w.querySelector('.ngTen').value.trim(), c=w.querySelector('.ngCD'); if(t && !c.value) return c; }
+  return null;
+}
+function duDu(){ const e=thieuO(); if(!e) return true;
+  const l=e.classList.contains('ngCD')?'Chức danh':(e.closest('.fld')?.querySelector('label')?.textContent||'').replace(/[*—].*$/s,'').replace('*','').trim();
+  e.focus(); toast('Vui lòng nhập: '+(l||'đủ các ô bắt buộc'),4000); return false; }
+// Học phí có sẵn trong danh mục → số tiền (VD "4.500.000/khóa" → 4500000; "15 triệu" → 15000000)
+function tienTuHP(h){ const m=String(h||'').match(/\d[\d.,]*/); if(!m) return 0; let n=+m[0].replace(/[.,]/g,''); if(n<1000 && /tri[eệ]u|\btr\b/i.test(h)) n*=1e6; return n; }
 function confirmDlg(msg,fn){ openDlg(`<h3>Xác nhận</h3><p style="white-space:pre-line">${esc(msg)}</p><div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="cOK">Đồng ý</button></div>`);
   $('#cOK').onclick=async()=>{closeDlg();try{await fn()}catch(e){toast('Lỗi: '+e.message,4000)}} }
 function viewPhieu(){
