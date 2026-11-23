@@ -22,10 +22,10 @@ const TABLES = {
   lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet'],
   dang_ky:  ['id','khoa_id','loai','ky_thuat_id','lua_chon_id','don_vi_id','ten_kt','don_vi_nhan','huong','don_vi_khac','chuyen_khoa',
              'hinh_thuc','so_nguoi','doi_tuong','thoi_gian','ghi_chu','nguoi_khai','sdt','created_at','updated_at',
-             'nhom_dt','loai_dt','ho_ten','chuc_danh','so_thang','co_so_dt','kinh_phi']
+             'nhom_dt','loai_dt','ho_ten','chuc_danh','so_thang','co_so_dt','kinh_phi','so_tien']
 };
 const BOOL = {mo:1, duyet:1};
-const NUM  = {so_nguoi:1, thu_tu:1};
+const NUM  = {so_nguoi:1, thu_tu:1, so_tien:1};
 const VIEW = 'Xem tổng hợp';
 const VIEW5 = 'PL5 – Đào tạo';
 const TEN_BV = 'Bệnh viện Phổi Hải Phòng';
@@ -178,7 +178,7 @@ function buildView_(){
   readT_('ky_thuat').forEach(x => kt[x.id] = x);
   readT_('don_vi').forEach(x => dv[x.id] = x);
   readT_('lua_chon').forEach(x => lc[x.id] = x);
-  const H = ['STT','Khoa/phòng đề xuất','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí','Ghi chú','Người đề xuất','SĐT','Cập nhật'];
+  const H = ['STT','Khoa/phòng đề xuất','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí','Số tiền dự kiến (đồng)','Ghi chú','Người đề xuất','SĐT','Cập nhật'];
   const rows = readT_('dang_ky').map(d => {
     const kh = (k[d.khoa_id]||{}).ten || '?', me = TEN_BV + ' (' + kh + ')';
     const o = lc[d.lua_chon_id] || {}, v = dv[d.don_vi_id] || {}, t = kt[d.ky_thuat_id] || {};
@@ -189,7 +189,7 @@ function buildView_(){
     else if(d.loai === 'kc'){ pl = 'PL' + d.huong; ten = d.ten_kt || 'Không có nhu cầu'; a = ''; b = me; }
     else { pl = 'PL4'; ten = 'Chuyên khoa: ' + d.chuyen_khoa; a = d.huong === 'nhan' ? d.don_vi_khac : me; b = d.huong === 'nhan' ? me : d.don_vi_khac; }
     return [kh, pl, t.chuyen_nganh || '', ten || '', a || '', b || '', d.hinh_thuc || '', d.so_nguoi == null ? '' : d.so_nguoi, d.doi_tuong || '', d.thoi_gian || '',
-            [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', d.updated_at || ''];
+            [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.loai === 'nhan' && d.so_tien ? d.so_tien : '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', d.updated_at || ''];
   }).sort((x,y) => (x[0]+x[1]).localeCompare(y[0]+y[1], 'vi')).map((r,i) => [i+1].concat(r));
   let s = ss_().getSheetByName(VIEW);
   if(!s){ s = ss_().insertSheet(VIEW, 0); }
