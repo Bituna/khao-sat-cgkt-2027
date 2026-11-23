@@ -184,7 +184,7 @@ const LocalDB = {
   async logout(){sessionStorage.removeItem('cgkt_admin')}
 };
 /* Google Sheet: ghi lạc quan – cập nhật ngay trên web, gửi lên Sheet chạy ngầm theo hàng đợi */
-let SYNC_Q=Promise.resolve(), SYNC_N=0, SYNC_ERR=false;
+let SYNC_Q=Promise.resolve(), SYNC_N=0, SYNC_ERR=false, SYNC_PEND=[], SYNC_SCHED=false;
 function syncBadge(){ const b=$('#syncBadge'); if(!b) return;
   b.className='badge '+(SYNC_N?'b-wait':SYNC_ERR?'b-close':'b-open');
   b.textContent = SYNC_N ? `⏳ Đang đồng bộ (${SYNC_N})…` : SYNC_ERR ? '⚠ Lỗi đồng bộ' : '✓ Đã lưu'; b.style.display=isDemo?'none':''; }
@@ -204,10 +204,18 @@ const GSDB = {
   _enqueue(req){
     const pw=sessionStorage.getItem('cgkt_pw'); if(pw) req.pw=pw;
     req.khoa_id = req.khoa_id || curKhoa();
-    SYNC_N++; syncBadge();
-    const done=async()=>{ SYNC_N--; syncBadge();
-      if(!SYNC_N && SYNC_ERR){ try{ await loadAll(true); SYNC_ERR=false; syncBadge(); render(); if(INADMIN) adminView(); }catch(x){} } };
-    SYNC_Q = SYNC_Q.then(()=>this._send(req)).then(done, e=>{ SYNC_ERR=true; toast('Không lưu được: '+e.message+' – web sẽ tải lại dữ liệu từ máy chủ',5000); return done(); });
+    SYNC_N++; syncBadge(); SYNC_PEND.push(req);
+    if(SYNC_SCHED) return; SYNC_SCHED=true;
+    // gom mọi thao tác phát sinh trong lúc chờ thành 1 lần gửi (batch) → lưu nhanh hơn nhiều
+    SYNC_Q = SYNC_Q.then(()=>new Promise(r=>setTimeout(r,0))).then(async()=>{
+      SYNC_SCHED=false; const ops=SYNC_PEND; SYNC_PEND=[];
+      try{
+        if(this._send!==GSDB._send){ for(const o of ops) await this._send(o); }
+        else await this._send(ops.length===1?ops[0]:{action:'batch',ops,pw:ops[0].pw,khoa_id:ops[0].khoa_id});
+      }catch(e){ SYNC_ERR=true; toast('Không lưu được: '+e.message+' – web sẽ tải lại dữ liệu từ máy chủ',5000); }
+      SYNC_N-=ops.length; syncBadge();
+      if(!SYNC_N && SYNC_ERR){ try{ await loadAll(true); SYNC_ERR=false; syncBadge(); render(); if(INADMIN) adminView(); }catch(x){} }
+    });
   },
   async allTables(){ const r=await fetch(CFG.GSHEET_URL+(CFG.GSHEET_URL.includes('?')?'&':'?')+'t='+Date.now()); const j=await r.json(); if(!j.ok) throw new Error(j.error); return j.data },
   async all(t){ return (await this.allTables())[t]||[] },
@@ -252,7 +260,11 @@ const isLocked = () => !!chotOf(curKhoa());
 const canEdit = () => ADMIN || (isOpen() && !isLocked());
 // thời lượng dạng "x ngày y giờ z phút"
 function fmtDur(ms){ ms=Math.abs(ms); const m=Math.floor(ms/60000), d=Math.floor(m/1440), h=Math.floor(m%1440/60), mi=m%60; return [d?d+' ngày':'',h?h+' giờ':'',(mi||(!d&&!h))?mi+' phút':''].filter(Boolean).join(' '); }
-const fmtDT = v => new Date(v).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});
+// Ngày giờ theo giờ Việt Nam: dd/mm/yyyy HH:mm
+const vnParts = v => Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(v)).map(x=>[x.type,x.value]));
+const fmtD = v => { const p=vnParts(v); return `${p.day}/${p.month}/${p.year}`; };
+const fmtHM = v => { const p=vnParts(v); return `${p.hour}:${p.minute}`; };
+const fmtDT = v => v ? fmtD(v)+' '+fmtHM(v) : '';
 // trạng thái nộp so với hạn chót: {muon:bool, txt}
 function treHan(t){ const h=cfg().han_chot; if(!h||!t) return null; const d=new Date(t)-new Date(h); return d>0?{muon:true,txt:'Nộp muộn '+fmtDur(d)+' so với hạn chót'}:{muon:false,txt:'Đúng hạn'}; }
 function tickClock(){ const el=$('#clock'); if(!el) return; const h=cfg().han_chot; if(!h){el.style.display='none';return} el.style.display='';
@@ -326,7 +338,7 @@ async function seedIfEmpty(force){
 /* ================= HEADER / CHUNG ================= */
 function renderHead(){
   const c=cfg(), o=isOpen();
-  const hc = c.han_chot ? new Date(c.han_chot).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+  const hc = c.han_chot ? fmtDT(c.han_chot) : '';
   $('#stBadge').className='badge '+(o?'b-open':'b-close');
   $('#stBadge').textContent = o ? '● Đang mở nhập liệu' : '● Đã khóa nhập liệu'; tickClock();
   $('#modeBadge').innerHTML = isDemo ? '<span class="badge b-wait" title="Dữ liệu chỉ lưu trên trình duyệt này">Chế độ dùng thử</span>' : (MODE==='sb'?'<span class="badge b-open" title="Dữ liệu lưu trên Supabase">Supabase</span>':'<span class="badge b-open" title="Dữ liệu lưu trên Google Sheet">Google Sheet</span>');
@@ -712,7 +724,7 @@ function viewPhieu(){
   const rows=S.dang_ky.filter(ofKhoa).sort((a,b)=>plOf(a)-plOf(b)||khoaOrder(a)-khoaOrder(b));
   const last=rows.map(r=>r.updated_at||r.created_at).sort().pop();
   $('#view').innerHTML=`<div class="card"><div style="text-align:center;margin-bottom:12px"><b style="font-size:16px;color:var(--navy)">PHIẾU ĐĂNG KÝ NHU CẦU CGKT & HỖ TRỢ CHUYÊN MÔN NĂM 2027</b><div>${kid?esc(byId('khoa',kid).ten):'Tất cả khoa/phòng'} – ${esc(CFG.TEN_BV)}</div>
-    <div class="muted">${rows.length} mục${last?' · cập nhật '+new Date(last).toLocaleString('vi-VN'):''}</div>${kid?(chotOf(kid)?`<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 In lại phiếu (đã chốt ${fmtDT(chotOf(kid))})</button>`:'<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 Chốt &amp; in phiếu theo mẫu phụ lục</button><div class="muted" style="margin-top:4px">Bấm in = chốt phiếu: sau đó khoa không sửa được nữa.</div>'):''}</div>${tblRows(rows,'all')}</div>`;
+    <div class="muted">${rows.length} mục${last?' · cập nhật '+fmtDT(last):''}</div>${kid?(chotOf(kid)?`<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 In lại phiếu (đã chốt ${fmtDT(chotOf(kid))})</button>`:'<button class="btn pri noprint" id="btnPrint" style="margin-top:8px">🖨 Chốt &amp; in phiếu theo mẫu phụ lục</button><div class="muted" style="margin-top:4px">Bấm in = chốt phiếu: sau đó khoa không sửa được nữa.</div>'):''}</div>${tblRows(rows,'all')}</div>`;
   if($('#btnPrint')) $('#btnPrint').onclick=()=>chotVaIn(kid);
   bindRowBtns();
 }
@@ -726,8 +738,19 @@ function chotVaIn(kid){
     toast('Đã chốt phiếu'); printPhieu(kid);
   });
 }
-function printPhieu(kid){
+const inLog = k => String(k?.in_log||'').split(';').map(x=>x.trim()).filter(Boolean);
+// Ghi nhận lần in lên máy chủ (giờ máy chủ) → trả về số lần in và thời điểm in
+async function ghiLanIn(kid){
+  const k=byId('khoa',kid), now=nowIso();
+  if(MODE!=='gs'){ const log=[...inLog(k),fmtDT(now)]; await DB.update('khoa',kid,{in_log:log.join('; ')}); return {lan:log.length,luc:now}; }
+  try{ await SYNC_Q; const pw=sessionStorage.getItem('cgkt_pw');
+    const j=await GSDB._send({action:'update',table:'khoa',id:kid,patch:{in_log:'1'},khoa_id:kid,...(pw?{pw}:{})});
+    const r=(j.res||[])[0]||{}; if(r.in_log!=null && k) k.in_log=r.in_log; return {lan:r.lan||inLog(k).length,luc:r.luc||now};
+  }catch(e){ toast('Không ghi nhận được lần in lên máy chủ: '+e.message,4000); return {lan:inLog(k).length+1,luc:now}; }
+}
+async function printPhieu(kid){
   const kh=byId('khoa',kid); if(!kh) return toast('Chọn Khoa/Phòng trước');
+  const IN=await ghiLanIn(kid), ip=vnParts(IN.luc);
   const mine=S.dang_ky.filter(d=>d.khoa_id===kid);
   const nguoi=$('#inNguoi').value.trim()||uniq(mine.map(d=>d.nguoi_khai)).join('; ');
   const sdt=$('#inSdt').value.trim()||uniq(mine.map(d=>d.sdt)).join('; ');
@@ -753,21 +776,24 @@ function printPhieu(kid){
     {n:4,o:'port',t:'PHỤ LỤC 4: HỖ TRỢ CÁN BỘ LUÂN PHIÊN NĂM 2027',h:['STT','ĐƠN VỊ HỖ TRỢ','ĐƠN VỊ NHẬN HỖ TRỢ','CHUYÊN KHOA','THỜI GIAN','GHI CHÚ'],w:[7,22,24,16,14,17],r:lp},
     {n:5,o:'land',t:'PHỤ LỤC 5. NHU CẦU ĐÀO TẠO VĂN BẰNG, CHỨNG CHỈ NĂM 2027',h:['STT','HỌ VÀ TÊN','CHỨC DANH','NHÓM ĐÀO TẠO','LOẠI HÌNH / CHUYÊN NGÀNH','CƠ SỞ ĐÀO TẠO','SỐ THÁNG','SỐ TIỀN DỰ KIẾN (đồng)','KINH PHÍ','GHI CHÚ'],w:[5,14,9,10,17,14,6,9,7,9],r:dt,tien:7}
   ].filter(p=>plOn(p.n));
-  const ch=chotOf(kid), tr=treHan(ch), now=nowIso();
-  const stLine=`<p class="st">${ch?'Chốt phiếu lúc '+fmtDT(ch):'Chưa chốt – in lúc '+fmtDT(now)}${cfg().han_chot?' · Hạn chót '+fmtDT(cfg().han_chot):''}${tr?' · <b class="'+(tr.muon?'late':'ok')+'">'+(tr.muon?tr.txt.toUpperCase():tr.txt)+'</b>':''}${ch&&new Date(now)-new Date(ch)>120000?' · In lại lúc '+fmtDT(now):''}</p>`;
+  const ch=chotOf(kid), tr=treHan(ch);
+  const inTxt=`In lần ${IN.lan} ngày ${ip.day}/${ip.month}/${ip.year} lúc ${ip.hour}:${ip.minute}`;
+  const stLine=`<p class="st">${ch?'Chốt phiếu lúc '+fmtDT(ch):'Chưa chốt'}${cfg().han_chot?' · Hạn chót '+fmtDT(cfg().han_chot):''}${tr?' · <b class="'+(tr.muon?'late':'ok')+'">'+(tr.muon?tr.txt.toUpperCase():tr.txt)+'</b>':''} · ${inTxt}</p>`;
   const page=p=>{ const nc=p.h.length, z=none(p.n); let body;
     if(p.r.length){ body=p.r.map(r=>'<tr>'+r.map((c,j)=>`<td${j===0||(p.n===5&&j===6)?' class="c"':j===p.tien?' class="r"':''}>${br(c)}</td>`).join('')+'</tr>').join('');
       if(p.tien!=null){ const sum=p.r.reduce((s,r)=>s+(+String(r[p.tien]).replace(/[^\d]/g,'')||0),0); body+=`<tr><td colspan="${p.tien}" class="c"><b>TỔNG CỘNG</b></td><td class="r"><b>${tien(sum)}</b></td>${'<td></td>'.repeat(nc-p.tien-1)}</tr>`; } }
     else if(z) body=`<tr><td class="c">1</td><td colspan="${nc-1}">${esc(NONE_TXT[p.n]||'Không có nhu cầu')}${z.ghi_chu?' – '+esc(z.ghi_chu):''}</td></tr>`;
     else body=[1,2,3].map(i=>'<tr><td class="c">'+i+'</td>'+'<td></td>'.repeat(nc-1)+'</tr>').join('');
-    return `<section class="${p.o}"><div class="hd"><div>SỞ Y TẾ HẢI PHÒNG<br><b>${esc(CFG.TEN_BV.toUpperCase())}</b><br><b>${esc(kh.ten.toUpperCase())}</b><hr></div>
-      <div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập - Tự do - Hạnh phúc</b><hr><i>Hải Phòng, ngày ...... tháng ...... năm 2026</i></div></div>
+    return `<section class="${p.o}"><table class="pg"><thead><tr><td><div class="mk">${esc(inTxt)}</div></td></tr></thead><tfoot><tr><td><div class="ft"></div></td></tr></tfoot><tbody><tr><td><div class="hd"><div>SỞ Y TẾ HẢI PHÒNG<br><b>${esc(CFG.TEN_BV.toUpperCase())}</b><br><b>${esc(kh.ten.toUpperCase())}</b><hr></div>
+      <div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập - Tự do - Hạnh phúc</b><hr><i>Hải Phòng, ngày ${ip.day} tháng ${ip.month} năm ${ip.year}</i></div></div>
       <p class="t">${esc(p.t)}</p>${stLine}
       <table><colgroup>${p.w.map(x=>`<col style="width:${x}%">`).join('')}</colgroup><thead><tr>${p.h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
       <div class="sg"><div><b>NGƯỜI ĐỀ XUẤT</b><i>(Ký, ghi rõ họ tên)</i><div class="sp"></div>${esc(nguoi)}${sdt?'<br>ĐT: '+esc(sdt):''}</div>
-      <div><b>TRƯỞNG KHOA/PHÒNG</b><i>(Ký, ghi rõ họ tên)</i><div class="sp"></div></div></div></section>`; };
+      <div><b>TRƯỞNG KHOA/PHÒNG</b><i>(Ký, ghi rõ họ tên)</i><div class="sp"></div></div></div></td></tr></tbody></table></section>`; };
   const html=`<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>Phieu_CGKT_2027_${esc(kh.ten)}</title><style>
-    @page land{size:A4 landscape;margin:12mm 12mm} @page port{size:A4 portrait;margin:15mm 12mm}
+    @page land{size:A4 landscape;margin:0} @page port{size:A4 portrait;margin:0}
+    section{padding:0 12mm} table.pg{border:0} table.pg>*>tr>td{border:0;padding:0;height:auto} table.pg>tbody>tr{break-inside:auto}
+    .mk{height:10mm;display:flex;align-items:center;justify-content:flex-end;font-size:9pt;font-style:italic;color:#333} .ft{height:10mm} .port .mk{height:13mm} .port .ft{height:13mm}
     body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;margin:0}
     section{break-after:page} section:last-child{break-after:auto} .land{page:land} .port{page:port}
     .t{text-align:center;font-weight:bold;font-size:13pt;margin:0 0 4pt} .st{text-align:center;font-style:italic;font-size:11pt;margin:0 0 8pt} .st .late{color:#c00000;font-style:normal} .st .ok{font-style:normal} .port .t{text-align:left}
@@ -835,7 +861,7 @@ function aTong(){
     <div class="tools"><button class="btn gr" id="xSo">⬇ Xuất mẫu gửi Sở (4 phụ lục)</button><button class="btn pri" id="xCT">⬇ Xuất file tổng hợp toàn bộ</button><button class="btn" id="xBK">⬇ Sao lưu dữ liệu (JSON)</button>
       ${pend?'<span class="badge b-wait" style="align-self:center">Còn đề xuất chưa duyệt – vẫn được đưa vào file xuất</span>':''}</div>
     <div class="row"><div><b>Tình trạng các khoa</b><div class="scroll" style="max-height:300px;margin-top:6px"><table class="tbl"><thead><tr><th>Khoa/Phòng</th><th>Số mục</th><th>Người đề xuất</th><th>Cập nhật</th><th>Chốt phiếu</th></tr></thead><tbody>
-      ${S.khoa.map(k=>{const r=S.dang_ky.filter(d=>d.khoa_id===k.id);const l=r.map(x=>x.updated_at||x.created_at).sort().pop();return `<tr><td>${esc(k.ten)}</td><td>${r.length?`<span class="badge b-open">${r.length}</span>`:'<span class="badge b-close">chưa</span>'}</td><td>${esc(uniq(r.map(x=>x.nguoi_khai)).join(', '))}</td><td>${l?new Date(l).toLocaleString('vi-VN'):''}</td><td style="white-space:nowrap">${k.chot_luc?(t=>`${fmtDT(k.chot_luc)}${t?` <span class="badge ${t.muon?'b-close':'b-open'}">${t.muon?'muộn '+fmtDur(new Date(k.chot_luc)-new Date(cfg().han_chot)):'đúng hạn'}</span>`:''} <button class="btn sm" data-unlock="${k.id}">Mở khóa</button>`)(treHan(k.chot_luc)):'<span class="muted">chưa chốt</span>'}</td></tr>`}).join('')}
+      ${S.khoa.map(k=>{const r=S.dang_ky.filter(d=>d.khoa_id===k.id);const l=r.map(x=>x.updated_at||x.created_at).sort().pop();return `<tr><td>${esc(k.ten)}</td><td>${r.length?`<span class="badge b-open">${r.length}</span>`:'<span class="badge b-close">chưa</span>'}</td><td>${esc(uniq(r.map(x=>x.nguoi_khai)).join(', '))}</td><td>${l?fmtDT(l):''}</td><td style="white-space:nowrap">${k.chot_luc?(t=>`${fmtDT(k.chot_luc)}${t?` <span class="badge ${t.muon?'b-close':'b-open'}">${t.muon?'muộn '+fmtDur(new Date(k.chot_luc)-new Date(cfg().han_chot)):'đúng hạn'}</span>`:''} <button class="btn sm" data-unlock="${k.id}">Mở khóa</button>`)(treHan(k.chot_luc)):'<span class="muted">chưa chốt</span>'}${inLog(k).length?`<div class="muted" title="${esc(inLog(k).map((x,i)=>'Lần '+(i+1)+': '+x).join('\n'))}">Đã in ${inLog(k).length} lần · lần cuối ${esc(inLog(k).slice(-1)[0])}</div>`:''}</td></tr>`}).join('')}
       </tbody></table></div></div>
       <div><b>PL1 – Nhận từ BV Trung ương (đã gộp)</b><div style="margin-top:6px">${gt(g1)}</div></div></div>
     <div style="margin-top:14px"><b>PL2 – Nhận từ BV tuyến thành phố (đã gộp)</b><div style="margin-top:6px">${gt(g2)}</div></div>
@@ -1112,7 +1138,7 @@ function sheetChiTiet(wb){
   tachNguoi([...S.dang_ky].sort((a,b)=>khoaTen(a.khoa_id).localeCompare(khoaTen(b.khoa_id),'vi')||plOf(a)-plOf(b))).forEach(({d,p,pi},i)=>{
     const k=byId('ky_thuat',d.ky_thuat_id),v=byId('don_vi',d.don_vi_id),o=byId('lua_chon',d.lua_chon_id),me=CFG.TEN_BV+' ('+khoaTen(d.khoa_id)+')';
     const [ten,dv,nhan]= d.loai==='nhan'?[k?.ten,v?.ten,me]: d.loai==='cg'?[d.ten_kt,me,d.don_vi_nhan]:d.loai==='dt'?[dtTen(d)+((p??dtNguoi(d))?' ('+(p??dtNguoi(d))+')':''),d.co_so_dt||'',me]:isNone(d)?[NONE_TXT[+d.huong]||'Không có nhu cầu','',me]:['Chuyên khoa: '+d.chuyen_khoa,d.huong==='nhan'?d.don_vi_khac:me,d.huong==='nhan'?me:d.don_vi_khac];
-    ws.addRow([i+1,khoaTen(d.khoa_id),'PL'+plOf(d),k?.chuyen_nganh||'',ten,dv,nhan,d.hinh_thuc||'',pi!=null?1:(d.so_nguoi??''),d.doi_tuong||'',d.thoi_gian||'',o?[o.goi,o.thoi_gian].filter(Boolean).join(', '):'',o?.hoc_phi||'',((d.loai==='nhan'||d.loai==='dt')&&+d.so_tien)?+d.so_tien*(d.loai==='dt'&&pi==null?(+d.so_nguoi||1):1):'',d.ghi_chu||'',d.nguoi_khai||'',d.sdt||'',(k&&!k.duyet)||(v&&!v.duyet)?'Chờ duyệt':'',d.updated_at?new Date(d.updated_at).toLocaleString('vi-VN'):'']);
+    ws.addRow([i+1,khoaTen(d.khoa_id),'PL'+plOf(d),k?.chuyen_nganh||'',ten,dv,nhan,d.hinh_thuc||'',pi!=null?1:(d.so_nguoi??''),d.doi_tuong||'',d.thoi_gian||'',o?[o.goi,o.thoi_gian].filter(Boolean).join(', '):'',o?.hoc_phi||'',((d.loai==='nhan'||d.loai==='dt')&&+d.so_tien)?+d.so_tien*(d.loai==='dt'&&pi==null?(+d.so_nguoi||1):1):'',d.ghi_chu||'',d.nguoi_khai||'',d.sdt||'',(k&&!k.duyet)||(v&&!v.duyet)?'Chờ duyệt':'',d.updated_at?fmtDT(d.updated_at):'']);
   });
   [6,24,8,24,44,28,28,22,8,24,16,18,16,16,30,18,12,10,18].forEach((w,i)=>ws.getColumn(i+1).width=w); ws.getColumn(14).numFmt='#,##0';
   ws.eachRow(r=>r.alignment={vertical:'top',wrapText:true}); ws.views=[{state:'frozen',ySplit:1}]; ws.autoFilter={from:'A1',to:{row:1,column:H.length}};
@@ -1122,7 +1148,7 @@ function sheetTongQuan(wb){
   const F={name:'Times New Roman',size:12};
   ws.mergeCells('A1:K1'); ws.getCell('A1').value='TỔNG HỢP NHU CẦU CHUYỂN GIAO KỸ THUẬT & HỖ TRỢ CHUYÊN MÔN NĂM 2027 – '+CFG.TEN_BV.toUpperCase();
   ws.getCell('A1').font={...F,size:14,bold:true}; ws.getCell('A1').alignment={horizontal:'center',wrapText:true}; ws.getRow(1).height=36;
-  ws.mergeCells('A2:K2'); ws.getCell('A2').value='Số liệu xuất lúc '+new Date().toLocaleString('vi-VN')+(isOpen()?' (đang mở nhập liệu)':' (đã khóa nhập liệu)'); ws.getCell('A2').font={...F,italic:true}; ws.getCell('A2').alignment={horizontal:'center'};
+  ws.mergeCells('A2:K2'); ws.getCell('A2').value='Số liệu xuất lúc '+fmtDT(new Date())+(isOpen()?' (đang mở nhập liệu)':' (đã khóa nhập liệu)'); ws.getCell('A2').font={...F,italic:true}; ws.getCell('A2').alignment={horizontal:'center'};
   const H=['STT','Khoa/Phòng','PL1 – Nhận từ TƯ','PL2 – Nhận từ tuyến TP','PL3 – CG tuyến dưới','PL4 – Luân phiên','PL5 – Đào tạo VB, CC','Tổng số mục','Số người dự kiến cử/nhận','Người đề xuất – SĐT','Cập nhật lần cuối'];
   const hr=ws.getRow(4); H.forEach((v,i)=>{const c=hr.getCell(i+1);c.value=v;c.font={...F,bold:true};c.border=BRD;c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8F0FA'}}}); hr.height=34;
   let r=5; const tot=[0,0,0,0,0,0,0];
