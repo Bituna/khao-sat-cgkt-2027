@@ -184,7 +184,7 @@ const LocalDB = {
   async logout(){sessionStorage.removeItem('cgkt_admin')}
 };
 /* Google Sheet: ghi lạc quan – cập nhật ngay trên web, gửi lên Sheet chạy ngầm theo hàng đợi */
-let SYNC_Q=Promise.resolve(), SYNC_N=0, SYNC_ERR=false;
+let SYNC_Q=Promise.resolve(), SYNC_N=0, SYNC_ERR=false, SYNC_PEND=[], SYNC_SCHED=false;
 function syncBadge(){ const b=$('#syncBadge'); if(!b) return;
   b.className='badge '+(SYNC_N?'b-wait':SYNC_ERR?'b-close':'b-open');
   b.textContent = SYNC_N ? `⏳ Đang đồng bộ (${SYNC_N})…` : SYNC_ERR ? '⚠ Lỗi đồng bộ' : '✓ Đã lưu'; b.style.display=isDemo?'none':''; }
@@ -204,10 +204,18 @@ const GSDB = {
   _enqueue(req){
     const pw=sessionStorage.getItem('cgkt_pw'); if(pw) req.pw=pw;
     req.khoa_id = req.khoa_id || curKhoa();
-    SYNC_N++; syncBadge();
-    const done=async()=>{ SYNC_N--; syncBadge();
-      if(!SYNC_N && SYNC_ERR){ try{ await loadAll(true); SYNC_ERR=false; syncBadge(); render(); if(INADMIN) adminView(); }catch(x){} } };
-    SYNC_Q = SYNC_Q.then(()=>this._send(req)).then(done, e=>{ SYNC_ERR=true; toast('Không lưu được: '+e.message+' – web sẽ tải lại dữ liệu từ máy chủ',5000); return done(); });
+    SYNC_N++; syncBadge(); SYNC_PEND.push(req);
+    if(SYNC_SCHED) return; SYNC_SCHED=true;
+    // gom mọi thao tác phát sinh trong lúc chờ thành 1 lần gửi (batch) → lưu nhanh hơn nhiều
+    SYNC_Q = SYNC_Q.then(()=>new Promise(r=>setTimeout(r,0))).then(async()=>{
+      SYNC_SCHED=false; const ops=SYNC_PEND; SYNC_PEND=[];
+      try{
+        if(this._send!==GSDB._send){ for(const o of ops) await this._send(o); }
+        else await this._send(ops.length===1?ops[0]:{action:'batch',ops,pw:ops[0].pw,khoa_id:ops[0].khoa_id});
+      }catch(e){ SYNC_ERR=true; toast('Không lưu được: '+e.message+' – web sẽ tải lại dữ liệu từ máy chủ',5000); }
+      SYNC_N-=ops.length; syncBadge();
+      if(!SYNC_N && SYNC_ERR){ try{ await loadAll(true); SYNC_ERR=false; syncBadge(); render(); if(INADMIN) adminView(); }catch(x){} }
+    });
   },
   async allTables(){ const r=await fetch(CFG.GSHEET_URL+(CFG.GSHEET_URL.includes('?')?'&':'?')+'t='+Date.now()); const j=await r.json(); if(!j.ok) throw new Error(j.error); return j.data },
   async all(t){ return (await this.allTables())[t]||[] },

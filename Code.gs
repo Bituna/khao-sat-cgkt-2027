@@ -249,34 +249,61 @@ function doGet(e){
     return ContentService.createTextOutput('{"ok":true,"data":' + data + '}').setMimeType(ContentService.MimeType.JSON);
   }catch(err){ return json_({ok:false, error:String(err.message||err)}); }
 }
+function apply_(req){
+  if(!TABLES[req.table]) throw new Error('Bảng không hợp lệ');
+  check_(req);
+  const t = req.table;
+  ensureCols_(t);
+  switch(req.action){
+    case 'insert': insert_(t, [].concat(req.rows)); break;
+    case 'update': update_(t, req.id, req.patch || {}); break;
+    case 'updateWhere': updateWhere_(t, req.col, req.val, req.patch || {}); break;
+    case 'remove': remove_(t, req.id); break;
+    case 'clear': clear_(t); break;
+    default: throw new Error('Thao tác không hợp lệ');
+  }
+  MEMO_ = {}; // dữ liệu vừa đổi → thao tác sau đọc lại
+  if(['dang_ky','khoa','ky_thuat','don_vi','lua_chon'].indexOf(t) >= 0) viewDirty_ = true;
+}
+let viewDirty_ = false;
 function doPost(e){
   const lock = LockService.getScriptLock();
   try{
     lock.waitLock(20000);
     const req = JSON.parse(e.postData.contents);
     if(req.action === 'login'){ if(req.pw === ADMIN_PW) return json_({ok:true}); throw new Error('Sai mật khẩu'); }
-    if(!TABLES[req.table]) throw new Error('Bảng không hợp lệ');
-    check_(req);
-    const t = req.table;
-    ensureCols_(t);
-    switch(req.action){
-      case 'insert': insert_(t, [].concat(req.rows)); break;
-      case 'update': update_(t, req.id, req.patch || {}); break;
-      case 'updateWhere': updateWhere_(t, req.col, req.val, req.patch || {}); break;
-      case 'remove': remove_(t, req.id); break;
-      case 'clear': clear_(t); break;
-      default: throw new Error('Thao tác không hợp lệ');
-    }
+    // batch: nhiều thao tác trong 1 lần gửi (web gom lại để lưu nhanh)
+    const ops = req.action === 'batch' ? [].concat(req.ops || []) : [req];
+    const res = [];
+    ops.forEach(o => {
+      const r = Object.assign({}, o, {pw: req.pw, khoa_id: o.khoa_id || req.khoa_id});
+      try{ apply_(r); res.push({ok:true}); }
+      catch(err){ res.push({ok:false, error:String(err.message||err)}); }
+    });
     SpreadsheetApp.flush();
     cacheClear_();
-    if(['dang_ky','khoa','ky_thuat','don_vi','lua_chon'].indexOf(t) >= 0) buildView_();
-    return json_({ok:true});
+    try{ allJson_(); }catch(x){} // dựng sẵn bộ đệm → người khác tải trang nhanh
+    // tab "Xem tổng hợp"/"PL5" dựng lại ngầm (trigger 1 phút) thay vì mỗi lần lưu → lưu nhanh hơn
+    if(viewDirty_) PropertiesService.getScriptProperties().setProperty('view_dirty', '1');
+    const bad = res.filter(x => !x.ok);
+    if(req.action !== 'batch' && bad.length) return json_({ok:false, error:bad[0].error});
+    return json_({ok:!bad.length, error: bad.length ? bad.map(x=>x.error).join('; ') : undefined, res});
   }catch(err){
     return json_({ok:false, error:String(err.message||err)});
   }finally{ try{ lock.releaseLock(); }catch(x){} }
 }
+function viewTick_(){ // chạy bởi trigger mỗi phút
+  const p = PropertiesService.getScriptProperties();
+  if(p.getProperty('view_dirty') !== '1') return;
+  p.deleteProperty('view_dirty');
+  buildView_();
+}
 
 /* ---------- Chạy tay ---------- */
-function caiDat(){ Object.keys(TABLES).forEach(ensureCols_); cacheClear_(); buildView_(); }
+function caiDat(){
+  Object.keys(TABLES).forEach(ensureCols_); cacheClear_(); buildView_();
+  if(!ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'viewTick_'))
+    ScriptApp.newTrigger('viewTick_').timeBased().everyMinutes(1).create();
+}
 function onEdit(){ cacheClear_(); } // sửa tay trên Sheet → web thấy ngay
 function onOpen(){ SpreadsheetApp.getUi().createMenu('Khảo sát CGKT').addItem('Cập nhật tab "Xem tổng hợp" + "PL5 – Đào tạo"','buildView_').addToUi(); }
