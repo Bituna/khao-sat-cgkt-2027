@@ -19,7 +19,7 @@ const TABLES = {
   khoa:     ['id','ten','thu_tu','chot_luc'],
   don_vi:   ['id','ten','tuyen','ghi_chu','duyet'],
   ky_thuat: ['id','ten','chuyen_nganh','duyet','de_xuat_khoa','created_at'],
-  lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet'],
+  lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet','khoa_id'],
   dang_ky:  ['id','khoa_id','loai','ky_thuat_id','lua_chon_id','don_vi_id','ten_kt','don_vi_nhan','huong','don_vi_khac','chuyen_khoa',
              'hinh_thuc','so_nguoi','doi_tuong','thoi_gian','ghi_chu','nguoi_khai','sdt','created_at','updated_at',
              'nhom_dt','loai_dt','ho_ten','chuc_danh','so_thang','co_so_dt','kinh_phi','so_tien']
@@ -167,6 +167,16 @@ function check_(req){
       return true;
     }
   }
+  if(t === 'lua_chon' && (a === 'update' || a === 'remove')){ // đơn vị khoa tự thêm ("Chọn đơn vị khác"), chưa duyệt
+    const o = readT_('lua_chon').find(x => String(x.id) === String(req.id));
+    if(!o) return true;
+    const kid = String(req.khoa_id || ''), refs = readT_('dang_ky').filter(d => String(d.lua_chon_id) === String(o.id));
+    const own = !o.duyet && kid && (o.khoa_id ? String(o.khoa_id) === kid && refs.every(d => String(d.khoa_id) === kid) : refs.length && refs.every(d => String(d.khoa_id) === kid));
+    if(!own) throw new Error('Chỉ khoa/phòng đã thêm đơn vị này mới được sửa/xóa');
+    lockErr(kid);
+    if(a === 'update' && req.patch && ['duyet','ky_thuat_id','khoa_id'].some(k => k in req.patch)) throw new Error('Không có quyền thực hiện thao tác này');
+    return true;
+  }
   if(['ky_thuat','don_vi','lua_chon'].indexOf(t) >= 0 && a === 'insert' && [].concat(req.rows).every(r => !r.duyet)) return true;
   throw new Error('Không có quyền thực hiện thao tác này');
 }
@@ -179,17 +189,19 @@ function buildView_(){
   readT_('don_vi').forEach(x => dv[x.id] = x);
   readT_('lua_chon').forEach(x => lc[x.id] = x);
   const H = ['STT','Khoa/phòng đề xuất','Phụ lục','Chuyên ngành','Kỹ thuật / nội dung','Đơn vị chuyển giao/hỗ trợ','Đơn vị nhận','Hình thức','Số người','Đối tượng','Thời gian','Gói/khóa','Học phí','Số tiền dự kiến (đồng)','Ghi chú','Người đề xuất','SĐT','Cập nhật'];
-  const rows = readT_('dang_ky').map(d => {
+  const rows = readT_('dang_ky').flatMap(d => { // PL5 nhiều người → mỗi người 1 dòng
     const kh = (k[d.khoa_id]||{}).ten || '?', me = TEN_BV + ' (' + kh + ')';
     const o = lc[d.lua_chon_id] || {}, v = dv[d.don_vi_id] || {}, t = kt[d.ky_thuat_id] || {};
     let pl, ten, a, b;
     if(d.loai === 'nhan'){ pl = v.tuyen === 'TW' ? 'PL1' : 'PL2'; ten = t.ten; a = v.ten; b = me; }
     else if(d.loai === 'cg'){ pl = 'PL3'; ten = d.ten_kt; a = me; b = d.don_vi_nhan; }
-    else if(d.loai === 'dt'){ pl = 'PL5'; ten = [d.loai_dt, d.chuyen_khoa].filter(Boolean).join(' – ') + (d.ho_ten ? ' (' + d.ho_ten + ')' : ''); a = d.co_so_dt; b = me; }
+    else if(d.loai === 'dt'){ pl = 'PL5'; ten = [d.loai_dt, d.chuyen_khoa].filter(Boolean).join(' – '); a = d.co_so_dt; b = me; }
     else if(d.loai === 'kc'){ pl = 'PL' + d.huong; ten = d.ten_kt || 'Không có nhu cầu'; a = ''; b = me; }
     else { pl = 'PL4'; ten = 'Chuyên khoa: ' + d.chuyen_khoa; a = d.huong === 'nhan' ? d.don_vi_khac : me; b = d.huong === 'nhan' ? me : d.don_vi_khac; }
-    return [kh, pl, t.chuyen_nganh || '', ten || '', a || '', b || '', d.hinh_thuc || '', d.so_nguoi == null ? '' : d.so_nguoi, d.doi_tuong || '', d.thoi_gian || '',
-            [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.loai === 'nhan' && d.so_tien ? d.so_tien : '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', d.updated_at || ''];
+    const ds = d.loai === 'dt' ? String(d.ho_ten||'').split(';').map(x => x.trim()).filter(Boolean) : [];
+    const row = (tn, sn) => [kh, pl, t.chuyen_nganh || '', tn || '', a || '', b || '', d.hinh_thuc || '', sn, d.doi_tuong || '', d.thoi_gian || '',
+            [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.so_tien ? (d.loai === 'nhan' ? d.so_tien : d.loai === 'dt' ? d.so_tien * (+sn || 1) : '') : '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', d.updated_at || ''];
+    return ds.length ? ds.map(p => row(ten + ' (' + p + ')', 1)) : [row(ten, d.so_nguoi == null ? '' : d.so_nguoi)];
   }).sort((x,y) => (x[0]+x[1]).localeCompare(y[0]+y[1], 'vi')).map((r,i) => [i+1].concat(r));
   let s = ss_().getSheetByName(VIEW);
   if(!s){ s = ss_().insertSheet(VIEW, 0); }
@@ -206,17 +218,18 @@ function buildView5_(k){
   if(!k){ k = {}; readT_('khoa').forEach(x => k[x.id] = x); }
   const kTen = d => (k[d.khoa_id]||{}).ten || '?', kOrd = d => { const x = k[d.khoa_id]; return x && x.thu_tu != null ? x.thu_tu : 999; };
   const nguoi = d => { const t = String(d.ho_ten||'').split(';').map(x=>x.trim()), c = String(d.chuc_danh||'').split(';').map(x=>x.trim());
-    return t.map((x,i) => x ? x + (c[i] ? ' (' + c[i] + ')' : '') : '').filter(Boolean).join('\n'); };
-  const H = ['STT','Nhóm','Khoa/Phòng','Loại đào tạo','Chuyên ngành / nội dung','Người được cử (chức danh)','Số lượng','Cơ sở đào tạo dự kiến','Bắt đầu dự kiến','Thời gian (tháng)','Hình thức','Nguồn kinh phí','Ghi chú','Người đề xuất','SĐT','Cập nhật'];
+    return t.map((x,i) => x ? x + (c[i] ? ' (' + c[i] + ')' : '') : '').filter(Boolean); }; // mỗi người 1 phần tử
+  const H = ['STT','Nhóm','Khoa/Phòng','Loại đào tạo','Chuyên ngành / nội dung','Người được cử (chức danh)','Số lượng','Cơ sở đào tạo dự kiến','Bắt đầu dự kiến','Thời gian (tháng)','Hình thức','Số tiền dự kiến (đồng/người)','Nguồn kinh phí','Ghi chú','Người đề xuất','SĐT','Cập nhật'];
   const all = readT_('dang_ky'), rows = [];
   ['Văn bằng','Chứng chỉ'].forEach(nhom => {
     all.filter(d => d.loai === 'dt' && (d.nhom_dt || 'Văn bằng') === nhom)
       .sort((a,b) => String(a.loai_dt||'').localeCompare(String(b.loai_dt||''),'vi') || kOrd(a) - kOrd(b))
-      .forEach(d => rows.push([nhom, kTen(d), d.loai_dt||'', d.chuyen_khoa||'', nguoi(d), d.so_nguoi == null ? '' : d.so_nguoi, d.co_so_dt||'', d.thoi_gian||'',
-        d.so_thang||'', d.hinh_thuc||'', d.kinh_phi||'', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||'']));
+      .forEach(d => { const ds = nguoi(d); // nhiều người → tách mỗi người 1 dòng, cùng nội dung
+        (ds.length ? ds : ['']).forEach(p => rows.push([nhom, kTen(d), d.loai_dt||'', d.chuyen_khoa||'', p, ds.length ? 1 : (d.so_nguoi == null ? '' : d.so_nguoi), d.co_so_dt||'', d.thoi_gian||'',
+        d.so_thang||'', d.hinh_thuc||'', d.so_tien == null ? '' : d.so_tien, d.kinh_phi||'', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||''])); });
   });
   all.filter(d => d.loai === 'kc' && String(d.huong) === '5').sort((a,b) => kOrd(a) - kOrd(b))
-    .forEach(d => rows.push(['Không có nhu cầu', kTen(d), 'Không có nhu cầu đào tạo văn bằng, chứng chỉ', '', '', '', '', '', '', '', '', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||'']));
+    .forEach(d => rows.push(['Không có nhu cầu', kTen(d), 'Không có nhu cầu đào tạo văn bằng, chứng chỉ', '', '', '', '', '', '', '', '', '', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||'']));
   const out = rows.map((r,i) => [i+1].concat(r));
   let s = ss_().getSheetByName(VIEW5);
   if(!s){ s = ss_().insertSheet(VIEW5, 1); }
