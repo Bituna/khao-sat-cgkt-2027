@@ -19,7 +19,7 @@ const TABLES = {
   khoa:     ['id','ten','thu_tu','chot_luc'],
   don_vi:   ['id','ten','tuyen','ghi_chu','duyet'],
   ky_thuat: ['id','ten','chuyen_nganh','duyet','de_xuat_khoa','created_at'],
-  lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet'],
+  lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet','khoa_id'],
   dang_ky:  ['id','khoa_id','loai','ky_thuat_id','lua_chon_id','don_vi_id','ten_kt','don_vi_nhan','huong','don_vi_khac','chuyen_khoa',
              'hinh_thuc','so_nguoi','doi_tuong','thoi_gian','ghi_chu','nguoi_khai','sdt','created_at','updated_at',
              'nhom_dt','loai_dt','ho_ten','chuc_danh','so_thang','co_so_dt','kinh_phi','so_tien']
@@ -166,6 +166,16 @@ function check_(req){
       }
       return true;
     }
+  }
+  if(t === 'lua_chon' && (a === 'update' || a === 'remove')){ // đơn vị khoa tự thêm ("Chọn đơn vị khác"), chưa duyệt
+    const o = readT_('lua_chon').find(x => String(x.id) === String(req.id));
+    if(!o) return true;
+    const kid = String(req.khoa_id || ''), refs = readT_('dang_ky').filter(d => String(d.lua_chon_id) === String(o.id));
+    const own = !o.duyet && kid && (o.khoa_id ? String(o.khoa_id) === kid && refs.every(d => String(d.khoa_id) === kid) : refs.length && refs.every(d => String(d.khoa_id) === kid));
+    if(!own) throw new Error('Chỉ khoa/phòng đã thêm đơn vị này mới được sửa/xóa');
+    lockErr(kid);
+    if(a === 'update' && req.patch && ['duyet','ky_thuat_id','khoa_id'].some(k => k in req.patch)) throw new Error('Không có quyền thực hiện thao tác này');
+    return true;
   }
   if(['ky_thuat','don_vi','lua_chon'].indexOf(t) >= 0 && a === 'insert' && [].concat(req.rows).every(r => !r.duyet)) return true;
   throw new Error('Không có quyền thực hiện thao tác này');

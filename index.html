@@ -400,7 +400,7 @@ function viewNhan(TY){
         <td class="u">${esc(d.ten||'?')} ${!o.duyet?' <span class="badge b-wait">mới</span>':''}</td>
         <td>${esc(o.doi_tuong||'')}</td><td class="f">${esc(o.thoi_gian||'')}${o.goi?' · '+esc(o.goi):''}</td>
         <td class="f">${esc(o.hoc_phi||'')}</td>
-        <td class="a"><button class="btn sm pri" data-pick="${o.id}">Chọn</button></td></tr>`}).join('')}
+        <td class="a" style="white-space:nowrap">${ownOffer(o)?`<button class="btn sm" data-lced="${o.id}">Sửa</button> <button class="btn sm dan" data-lcdel="${o.id}">Xóa</button> `:''}<button class="btn sm pri" data-pick="${o.id}">Chọn</button></td></tr>`}).join('')}
         <tr><td colspan="5" style="border-top:0;padding-top:4px"><button class="btn sm" data-otherdv="${k.id}">＋ Chọn đơn vị khác</button></td></tr>
       </table></div>`;
   });
@@ -415,6 +415,33 @@ function viewNhan(TY){
   nb.bind(); lockIfNone(nb,'#btnNew,[data-pick],[data-otherdv]');
   document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{if(!needKhoa(TY==='TW'?1:2))return;const o=byId('lua_chon',b.dataset.pick);dlgNhan({mode:'pick',kt:byId('ky_thuat',o.ky_thuat_id),lc:o,TY})});
   document.querySelectorAll('[data-otherdv]').forEach(b=>b.onclick=()=>needKhoa(TY==='TW'?1:2)&&dlgNhan({mode:'otherdv',kt:byId('ky_thuat',b.dataset.otherdv),TY}));
+  document.querySelectorAll('[data-lced]').forEach(b=>b.onclick=()=>needKhoa(TY==='TW'?1:2,true)&&dlgOffer(byId('lua_chon',b.dataset.lced),TY));
+  document.querySelectorAll('[data-lcdel]').forEach(b=>b.onclick=()=>{ if(!needKhoa(TY==='TW'?1:2,true)) return; const o=byId('lua_chon',b.dataset.lcdel), refs=S.dang_ky.filter(d=>d.lua_chon_id===o.id);
+    confirmDlg(`Xóa đơn vị "${byId('don_vi',o.don_vi_id)?.ten||''}" khỏi kỹ thuật này${refs.length?` và ${refs.length} đăng ký của khoa`:''}?`,async()=>{for(const d of refs)await DB.remove('dang_ky',d.id);await DB.remove('lua_chon',o.id);await loadAll();render();toast('Đã xóa')}); });
+}
+// Phương án (đơn vị) do khoa tự thêm qua "Chọn đơn vị khác": khoa đó được sửa/xóa khi chưa duyệt
+function ownOffer(o){ if(ADMIN) return !o.duyet; const kid=curKhoa(); if(!kid||o.duyet||!canEdit()) return false;
+  const refs=S.dang_ky.filter(d=>d.lua_chon_id===o.id); if(o.khoa_id) return o.khoa_id===kid&&refs.every(d=>d.khoa_id===kid);
+  return refs.length>0&&refs.every(d=>d.khoa_id===kid); }
+function dlgOffer(o,TY){
+  const kt=byId('ky_thuat',o.ky_thuat_id)||{}, dv=byId('don_vi',o.don_vi_id)||{};
+  openDlg(`<h3>Sửa đơn vị chuyển giao / đào tạo</h3><div class="sub">${esc(kt.ten||'')}</div>
+    <div class="fld"><label>Đơn vị chuyển giao / đào tạo *</label><input type="text" id="oDV" list="dlDV" value="${esc(dv.ten||'')}">${dvDatalist(TY)}</div>
+    <div class="row"><div class="fld"><label>Đối tượng</label><input type="text" id="oDT" value="${esc(o.doi_tuong||'')}"></div>
+      <div class="fld"><label>Thời gian khóa học</label><input type="text" id="oTG" value="${esc(o.thoi_gian||'')}"></div></div>
+    <div class="row"><div class="fld"><label>Gói / khóa</label><input type="text" id="oGoi" value="${esc(o.goi||'')}"></div>
+      <div class="fld"><label>Học phí tham khảo</label><input type="text" id="oHP" value="${esc(o.hoc_phi||'')}"></div></div>
+    <div class="dft"><button class="btn" onclick="closeDlg()">Hủy</button><button class="btn pri" id="oOK">Lưu</button></div>`);
+  $('#oOK').onclick=async()=>{ try{
+    const ten=$('#oDV').value.trim(); if(!ten) return toast('Nhập đơn vị chuyển giao/đào tạo');
+    let d=S.don_vi.find(x=>norm(x.ten)===norm(ten));
+    if(d && d.tuyen!==TY) return toast(`${d.ten} thuộc ${d.tuyen==='TW'?'tuyến Trung ương':'tuyến thành phố'}`,4000);
+    if(d && d.id!==o.don_vi_id && S.lua_chon.some(l=>l.id!==o.id&&l.ky_thuat_id===o.ky_thuat_id&&l.don_vi_id===d.id)) return toast('Kỹ thuật này đã có đơn vị đó – bấm Chọn ở dòng tương ứng',4000);
+    if(!d){ d={id:uid(),ten,tuyen:TY,duyet:ADMIN,ghi_chu:'Khoa đề xuất'}; await DB.insert('don_vi',d); }
+    await DB.update('lua_chon',o.id,{don_vi_id:d.id,doi_tuong:$('#oDT').value.trim(),thoi_gian:$('#oTG').value.trim(),goi:$('#oGoi').value.trim(),hoc_phi:$('#oHP').value.trim()});
+    if(d.id!==o.don_vi_id) for(const r of S.dang_ky.filter(x=>x.lua_chon_id===o.id)) await DB.update('dang_ky',r.id,{don_vi_id:d.id,updated_at:nowIso()});
+    await loadAll(); render(); closeDlg(); toast('Đã lưu');
+  }catch(e){toast('Lỗi: '+(e.message||e),4000)} };
 }
 
 /* ---- Hộp thoại đăng ký nhận CGKT/đào tạo ---- */
@@ -492,7 +519,7 @@ function dlgNhan({mode,kt,lc,edit,TY}){
         if(!dv){dv={id:uid(),ten:dvTen,tuyen:TY,duyet:ADMIN,ghi_chu:'Khoa đề xuất'};await DB.insert('don_vi',dv)}
         dvId=dv.id;
         let o=S.lua_chon.find(l=>l.ky_thuat_id===ktId&&l.don_vi_id===dvId);
-        if(!o){o={id:uid(),ky_thuat_id:ktId,don_vi_id:dvId,doi_tuong:base.doi_tuong,thoi_gian:'',goi:'',hoc_phi:'',duyet:ADMIN};await DB.insert('lua_chon',o)}
+        if(!o){o={id:uid(),ky_thuat_id:ktId,don_vi_id:dvId,doi_tuong:base.doi_tuong,thoi_gian:'',goi:'',hoc_phi:'',duyet:ADMIN,khoa_id:curKhoa()};await DB.insert('lua_chon',o)}
         lcId=o.id;
       }
       const row={...base,loai:'nhan',ky_thuat_id:ktId,lua_chon_id:lcId,don_vi_id:dvId};
