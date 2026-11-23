@@ -16,7 +16,7 @@ const ADMIN_PW = 'doi-mat-khau-nay';
 
 const TABLES = {
   cau_hinh: ['id','mo','han_chot','thong_bao','phu_luc'],
-  khoa:     ['id','ten','thu_tu','chot_luc'],
+  khoa:     ['id','ten','thu_tu','chot_luc','in_log'],
   don_vi:   ['id','ten','tuyen','ghi_chu','duyet'],
   ky_thuat: ['id','ten','chuyen_nganh','duyet','de_xuat_khoa','created_at'],
   lua_chon: ['id','ky_thuat_id','don_vi_id','doi_tuong','thoi_gian','goi','hoc_phi','nguon_tt','duyet','khoa_id'],
@@ -29,6 +29,8 @@ const NUM  = {so_nguoi:1, thu_tu:1, so_tien:1};
 const VIEW = 'Xem tổng hợp';
 const VIEW5 = 'PL5 – Đào tạo';
 const TEN_BV = 'Bệnh viện Phổi Hải Phòng';
+const TZ = 'Asia/Ho_Chi_Minh';
+function vn_(v){ if(!v) return ''; const d = new Date(v); return isNaN(d) ? String(v) : Utilities.formatDate(d, TZ, 'dd/MM/yyyy HH:mm'); } // giờ Việt Nam
 
 /* ---------- Sheet helpers ---------- */
 function ss_(){ return SpreadsheetApp.getActiveSpreadsheet(); }
@@ -136,6 +138,16 @@ function plOn_(n){
 
 /* ---------- Kiểm tra quyền ---------- */
 function check_(req){
+  // Ghi nhận mỗi lần in phiếu: nối thêm giờ in (giờ VN, lấy theo máy chủ) – khoa và admin đều ghi
+  if(req.table === 'khoa' && req.action === 'update' && req.patch && Object.keys(req.patch).join() === 'in_log'){
+    const k = readT_('khoa').find(x => String(x.id) === String(req.id));
+    if(!k) throw new Error('Không tìm thấy khoa/phòng');
+    const now = new Date(), log = String(k.in_log || '').split(';').map(x => x.trim()).filter(Boolean);
+    log.push(vn_(now));
+    req.patch.in_log = log.join('; ');
+    req._in = {lan: log.length, luc: now.toISOString(), in_log: req.patch.in_log};
+    return true;
+  }
   const admin = req.pw && req.pw === ADMIN_PW;
   if(admin) return true;
   const t = req.table, a = req.action;
@@ -200,7 +212,7 @@ function buildView_(){
     else { pl = 'PL4'; ten = 'Chuyên khoa: ' + d.chuyen_khoa; a = d.huong === 'nhan' ? d.don_vi_khac : me; b = d.huong === 'nhan' ? me : d.don_vi_khac; }
     const ds = d.loai === 'dt' ? String(d.ho_ten||'').split(';').map(x => x.trim()).filter(Boolean) : [];
     const row = (tn, sn) => [kh, pl, t.chuyen_nganh || '', tn || '', a || '', b || '', d.hinh_thuc || '', sn, d.doi_tuong || '', d.thoi_gian || '',
-            [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.so_tien ? (d.loai === 'nhan' ? d.so_tien : d.loai === 'dt' ? d.so_tien * (+sn || 1) : '') : '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', d.updated_at || ''];
+            [o.goi, o.thoi_gian].filter(Boolean).join(', '), o.hoc_phi || '', d.so_tien ? (d.loai === 'nhan' ? d.so_tien : d.loai === 'dt' ? d.so_tien * (+sn || 1) : '') : '', d.ghi_chu || '', d.nguoi_khai || '', d.sdt || '', vn_(d.updated_at)];
     return ds.length ? ds.map(p => row(ten + ' (' + p + ')', 1)) : [row(ten, d.so_nguoi == null ? '' : d.so_nguoi)];
   }).sort((x,y) => (x[0]+x[1]).localeCompare(y[0]+y[1], 'vi')).map((r,i) => [i+1].concat(r));
   let s = ss_().getSheetByName(VIEW);
@@ -211,6 +223,25 @@ function buildView_(){
   if(rows.length) s.getRange(2,1,rows.length,H.length).setValues(rows);
   s.getRange(1,1,Math.max(rows.length,1)+1,H.length).setWrap(true).setVerticalAlignment('top');
   buildView5_(k);
+  buildViewIn_();
+}
+
+/* ---------- Tab Lịch sử chốt & in phiếu (giờ VN) ---------- */
+function buildViewIn_(){
+  const VIEWIN = 'Lịch sử chốt & in', c = readT_('cau_hinh')[0] || {}, han = c.han_chot ? new Date(c.han_chot) : null;
+  const H = ['STT','Khoa/Phòng','Chốt phiếu lúc','So với hạn chót','Số lần in','Các lần in'];
+  const rows = readT_('khoa').slice().sort((a,b) => (a.thu_tu||0) - (b.thu_tu||0)).map((k,i) => {
+    const log = String(k.in_log || '').split(';').map(x => x.trim()).filter(Boolean);
+    const ch = k.chot_luc ? new Date(k.chot_luc) : null;
+    return [i+1, k.ten || '', ch ? vn_(ch) : 'Chưa chốt', ch && han ? (ch > han ? 'Nộp muộn' : 'Đúng hạn') : '', log.length, log.map((x,j) => 'Lần ' + (j+1) + ': ' + x).join('\n')];
+  });
+  let s = ss_().getSheetByName(VIEWIN);
+  if(!s){ s = ss_().insertSheet(VIEWIN, 2); }
+  s.clear();
+  s.getRange(1,1,1,H.length).setValues([H]).setFontWeight('bold').setBackground('#E8F0FA');
+  s.setFrozenRows(1);
+  if(rows.length) s.getRange(2,1,rows.length,H.length).setValues(rows);
+  s.getRange(1,1,Math.max(rows.length,1)+1,H.length).setWrap(true).setVerticalAlignment('top');
 }
 
 /* ---------- Tab riêng PL5 – Đào tạo văn bằng, chứng chỉ ---------- */
@@ -226,10 +257,10 @@ function buildView5_(k){
       .sort((a,b) => String(a.loai_dt||'').localeCompare(String(b.loai_dt||''),'vi') || kOrd(a) - kOrd(b))
       .forEach(d => { const ds = nguoi(d); // nhiều người → tách mỗi người 1 dòng, cùng nội dung
         (ds.length ? ds : ['']).forEach(p => rows.push([nhom, kTen(d), d.loai_dt||'', d.chuyen_khoa||'', p, ds.length ? 1 : (d.so_nguoi == null ? '' : d.so_nguoi), d.co_so_dt||'', d.thoi_gian||'',
-        d.so_thang||'', d.hinh_thuc||'', d.so_tien == null ? '' : d.so_tien, d.kinh_phi||'', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||''])); });
+        d.so_thang||'', d.hinh_thuc||'', d.so_tien == null ? '' : d.so_tien, d.kinh_phi||'', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', vn_(d.updated_at)])); });
   });
   all.filter(d => d.loai === 'kc' && String(d.huong) === '5').sort((a,b) => kOrd(a) - kOrd(b))
-    .forEach(d => rows.push(['Không có nhu cầu', kTen(d), 'Không có nhu cầu đào tạo văn bằng, chứng chỉ', '', '', '', '', '', '', '', '', '', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', d.updated_at||'']));
+    .forEach(d => rows.push(['Không có nhu cầu', kTen(d), 'Không có nhu cầu đào tạo văn bằng, chứng chỉ', '', '', '', '', '', '', '', '', '', d.ghi_chu||'', d.nguoi_khai||'', d.sdt||'', vn_(d.updated_at)]));
   const out = rows.map((r,i) => [i+1].concat(r));
   let s = ss_().getSheetByName(VIEW5);
   if(!s){ s = ss_().insertSheet(VIEW5, 1); }
@@ -277,7 +308,7 @@ function doPost(e){
     const res = [];
     ops.forEach(o => {
       const r = Object.assign({}, o, {pw: req.pw, khoa_id: o.khoa_id || req.khoa_id});
-      try{ apply_(r); res.push({ok:true}); }
+      try{ apply_(r); res.push(Object.assign({ok:true}, r._in || {})); }
       catch(err){ res.push({ok:false, error:String(err.message||err)}); }
     });
     SpreadsheetApp.flush();
